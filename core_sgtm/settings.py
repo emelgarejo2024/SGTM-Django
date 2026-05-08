@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-2whe-o-_ceknj0h@a53_m(m%q9*40y!&h41xsyygdg_ga&z#(j
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'turnos',
 ]
 
 MIDDLEWARE = [
@@ -74,8 +75,12 @@ WSGI_APPLICATION = 'core_sgtm.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'sgtm_db',
+        'USER': 'sgtm_admin',
+        'PASSWORD': 'Patricio1@2004',
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
     }
 }
 
@@ -115,3 +120,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+
+AUTH_USER_MODEL = 'turnos.Usuario'
