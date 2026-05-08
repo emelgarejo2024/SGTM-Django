@@ -1,0 +1,145 @@
+[
+{
+  "model": "turnos.usuario",
+  "pk": 1,
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$wGAKhOHlFibC6nAGHWYqkQ$ZZbcfQ1xUTE4crvo1dILXV1TLOn+lvwfVgALv1vLIEo=",
+    "last_login": "2026-05-08T11:38:35.124Z",
+    "is_superuser": true,
+    "username": "admin",
+    "first_name": "",
+    "last_name": "",
+    "email": "emelgarejo2024@alu.uct.cl",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-05-08T11:24:05.133Z",
+    "rut": "",
+    "rol": "PACIENTE",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "turnos.usuario",
+  "pk": 2,
+  "fields": {
+    "password": "12345",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "Dr.Alan",
+    "first_name": "Alan",
+    "last_name": "Caseres",
+    "email": "AlanC@example.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-08T11:45:41Z",
+    "rut": "13.123.456-7",
+    "rol": "MEDICO",
+    "groups": [],
+    "user_permissions": [
+      1
+    ]
+  }
+},
+{
+  "model": "turnos.usuario",
+  "pk": 3,
+  "fields": {
+    "password": "54321",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "Dra.Sandra",
+    "first_name": "Sandra",
+    "last_name": "Lopez",
+    "email": "Slopez@example.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-08T11:51:21Z",
+    "rut": "12.876.543-2",
+    "rol": "MEDICO",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "turnos.especialidad",
+  "pk": 1,
+  "fields": {
+    "nombre": "Medicina General"
+  }
+},
+{
+  "model": "turnos.especialidad",
+  "pk": 2,
+  "fields": {
+    "nombre": "Cardiologia"
+  }
+},
+{
+  "model": "turnos.especialidad",
+  "pk": 3,
+  "fields": {
+    "nombre": "Pediatra"
+  }
+},
+{
+  "model": "turnos.bloquedisponibilidad",
+  "pk": 1,
+  "fields": {
+    "medico": 2,
+    "especialidad": 1,
+    "fecha": "2026-05-08",
+    "hora_inicio": "12:00:00",
+    "hora_fin": "13:00:00",
+    "esta_disponible": true
+  }
+},
+{
+  "model": "turnos.bloquedisponibilidad",
+  "pk": 2,
+  "fields": {
+    "medico": 2,
+    "especialidad": 1,
+    "fecha": "2026-05-09",
+    "hora_inicio": "12:00:00",
+    "hora_fin": "13:00:00",
+    "esta_disponible": true
+  }
+},
+{
+  "model": "turnos.bloquedisponibilidad",
+  "pk": 3,
+  "fields": {
+    "medico": 2,
+    "especialidad": 1,
+    "fecha": "2026-05-10",
+    "hora_inicio": "12:00:00",
+    "hora_fin": "13:00:00",
+    "esta_disponible": true
+  }
+},
+{
+  "model": "turnos.bloquedisponibilidad",
+  "pk": 4,
+  "fields": {
+    "medico": 3,
+    "especialidad": 2,
+    "fecha": "2026-05-12",
+    "hora_inicio": "14:00:00",
+    "hora_fin": "16:00:00",
+    "esta_disponible": true
+  }
+},
+{
+  "model": "turnos.bloquedisponibilidad",
+  "pk": 5,
+  "fields": {
+    "medico": 3,
+    "especialidad": 2,
+    "fecha": "2026-05-20",
+    "hora_inicio": "14:00:00",
+    "hora_fin": "16:00:00",
+    "esta_disponible": true
+  }
+}
+]
