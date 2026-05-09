@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 
 # 1. USUARIO
 class Usuario(AbstractUser):
@@ -39,6 +40,42 @@ class BloqueDisponibilidad(models.Model):
     class Meta:
         unique_together = ('medico', 'fecha', 'hora_inicio')
         ordering = ['fecha', 'hora_inicio']
+        constraints = [
+            # CAPA 3: hora_fin siempre debe ser posterior a hora_inicio
+            models.CheckConstraint(
+                condition=models.Q(hora_fin__gt=models.F('hora_inicio')),
+                name='bloque_hora_fin_despues_de_inicio',
+            ),
+        ]
+
+    def clean(self):
+        """
+        CAPA 3 (nivel Django): Valida que no existan bloques superpuestos
+        para el mismo médico en la misma fecha.
+        Un bloque se superpone si: su hora_inicio < mi hora_fin AND su hora_fin > mi hora_inicio.
+        """
+        super().clean()
+
+        if self.hora_inicio and self.hora_fin and self.hora_inicio >= self.hora_fin:
+            raise ValidationError({
+                'hora_fin': 'La hora de fin debe ser posterior a la hora de inicio.'
+            })
+
+        if self.medico_id and self.fecha and self.hora_inicio and self.hora_fin:
+            bloques_superpuestos = BloqueDisponibilidad.objects.filter(
+                medico=self.medico,
+                fecha=self.fecha,
+                hora_inicio__lt=self.hora_fin,   # El otro empieza antes de que yo termine
+                hora_fin__gt=self.hora_inicio,    # El otro termina después de que yo empiezo
+            ).exclude(pk=self.pk)  # Excluir el bloque actual (para ediciones)
+
+            if bloques_superpuestos.exists():
+                bloque_conflicto = bloques_superpuestos.first()
+                raise ValidationError(
+                    f'Este bloque se superpone con otro existente: '
+                    f'{bloque_conflicto.hora_inicio} - {bloque_conflicto.hora_fin}. '
+                    f'No se permite overbooking.'
+                )
 
     def __str__(self):
         return f"Bloque: {self.medico.first_name} | {self.fecha} {self.hora_inicio} - {'Libre' if self.esta_disponible else 'Ocupado'}"
