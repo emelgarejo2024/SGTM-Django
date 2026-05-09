@@ -1,5 +1,9 @@
-ven/
+venv/
 __pycache__/
 .env
 *.pyc
 db.sqlite3
+
+# Archivos temporales de consultas al council de LLMs
+run_council_query.py
+council_result.txt
