@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Agenda{% endblock %}
+
+{% block content %}
+
+<h2>Agenda del Médico</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Hora</th>
+            <th>Paciente</th>
+            <th>Motivo</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>09:00</td>
+            <td>Juan Pérez</td>
+            <td>Control</td>
+        </tr>
+        <tr>
+            <td>10:00</td>
+            <td>María López</td>
+            <td>Consulta</td>
+        </tr>
+    </tbody>
+</table>
+
+{% endblock %}
