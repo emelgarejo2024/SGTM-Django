@@ -1,38 +1,122 @@
 {% extends 'base.html' %}
 
 {% block title %}Inicio{% endblock %}
+{% block nav_inicio %}active{% endblock %}
+
+{% block hero %}
+<!-- HERO SECTION -->
+<div class="hero-section" style="margin: -2rem -0.75rem 2rem; padding: 3rem 1.5rem;">
+    <div class="hero-content">
+        <div class="row align-items-center">
+            <div class="col-md-7">
+                <h1 class="hero-title animate-in">
+                    Reserve su turno médico<br>
+                    <span style="opacity: 0.85; font-weight: 400; font-size: 0.65em;">de forma rápida y segura</span>
+                </h1>
+                <p class="hero-subtitle animate-in animate-in-delay-1">
+                    Seleccione la especialidad y fecha deseada para ver los horarios disponibles con nuestros profesionales.
+                </p>
+            </div>
+            <div class="col-md-5">
+                <div class="hero-stats animate-in animate-in-delay-2">
+                    <div class="hero-stat">
+                        <span class="hero-stat-number" id="stat-especialidades">—</span>
+                        <span class="hero-stat-label">Especialidades</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="hero-stat-number"><i class="bi bi-shield-check"></i></span>
+                        <span class="hero-stat-label">Anti-Overbooking</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="hero-stat-number">24/7</span>
+                        <span class="hero-stat-label">Disponible</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
 
 {% block content %}
 
-<h2>Buscar Turnos Médicos</h2>
-
-<form method="GET" action="/agenda/">
-    
-    <div class="mb-3">
-        <label class="form-label">Especialidad</label>
-        <select name="especialidad" class="form-control" required>
-            <option value="">Seleccione...</option>
-            {% for esp in especialidades %}
-                <option value="{{ esp.id }}">{{ esp.nombre }}</option>
-            {% endfor %}
-        </select>
+<!-- SEARCH CARD -->
+<div class="sgtm-card animate-in animate-in-delay-1" id="search-card">
+    <div class="sgtm-card-header">
+        <h2 style="font-size: 1.1rem; font-weight: 700; color: var(--primary-dark); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="bi bi-search-heart"></i>
+            Buscar Turnos Disponibles
+        </h2>
     </div>
+    <div class="sgtm-card-body">
+        <form method="GET" action="/agenda/" id="form-buscar">
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <label class="form-label-sgtm">
+                        <i class="bi bi-clipboard2-pulse"></i> Especialidad
+                    </label>
+                    <select name="especialidad" id="select-especialidad" class="form-control form-control-sgtm" required>
+                        <option value="">Cargando especialidades...</option>
+                    </select>
+                </div>
 
-    <div class="mb-3">
-        <label class="form-label">Fecha</label>
-        <input type="date" name="fecha" class="form-control" required>
+                <div class="col-md-4">
+                    <label class="form-label-sgtm">
+                        <i class="bi bi-calendar3"></i> Fecha
+                    </label>
+                    <input type="date" name="fecha" class="form-control form-control-sgtm" required id="input-fecha">
+                </div>
+
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn-sgtm w-100" id="btn-buscar">
+                        <i class="bi bi-search"></i> Buscar turnos
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
+</div>
 
-    <button type="submit" class="btn btn-primary">Buscar</button>
-
-</form>
-
-{% if especialidad and fecha %}
-    <div class="alert alert-success mt-4">
-        <strong>Búsqueda realizada:</strong><br>
-        Especialidad: {{ especialidad }}<br>
-        Fecha: {{ fecha }}
+<!-- INFO CARDS -->
+<div class="row g-3 mt-3 animate-in animate-in-delay-2">
+    <div class="col-md-4">
+        <div class="sgtm-card" style="height: 100%;">
+            <div class="sgtm-card-body text-center" style="padding: 1.75rem 1.25rem;">
+                <div style="width: 48px; height: 48px; background: var(--primary-subtle); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; color: var(--primary); font-size: 1.3rem;">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <h6 style="font-weight: 700; font-size: 0.9rem; margin-bottom: 0.35rem;">Reserva Instantánea</h6>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Confirme su turno en segundos con disponibilidad en tiempo real.</p>
+            </div>
+        </div>
     </div>
-{% endif %}
+    <div class="col-md-4">
+        <div class="sgtm-card" style="height: 100%;">
+            <div class="sgtm-card-body text-center" style="padding: 1.75rem 1.25rem;">
+                <div style="width: 48px; height: 48px; background: #EEF2FF; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; color: var(--accent); font-size: 1.3rem;">
+                    <i class="bi bi-shield-lock"></i>
+                </div>
+                <h6 style="font-weight: 700; font-size: 0.9rem; margin-bottom: 0.35rem;">Seguridad Anti-Overbooking</h6>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Sistema de 3 capas que garantiza que su turno no se duplique.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="sgtm-card" style="height: 100%;">
+            <div class="sgtm-card-body text-center" style="padding: 1.75rem 1.25rem;">
+                <div style="width: 48px; height: 48px; background: #ECFDF5; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; color: var(--success); font-size: 1.3rem;">
+                    <i class="bi bi-people"></i>
+                </div>
+                <h6 style="font-weight: 700; font-size: 0.9rem; margin-bottom: 0.35rem;">Profesionales Calificados</h6>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Acceda a médicos especialistas verificados en múltiples áreas.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Llamada a la función JS externa para cargar especialidades -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() { cargarEspecialidades(); });
+</script>
 
 {% endblock %}
