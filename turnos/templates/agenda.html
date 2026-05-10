@@ -12,22 +12,28 @@
 <table class="table table-striped">
     <thead>
         <tr>
-            <th>Hora</th>
-            <th>Paciente</th>
-            <th>Motivo</th>
+            <th>Horario</th>
+            <th>Médico</th>
+            <th>Especialidad</th>
+            <th>Acción</th>
         </tr>
     </thead>
     <tbody>
-        {% for paciente in pacientes %}
+        {% for bloque in bloques %}
         <tr>
-            <td>{{ paciente.hora }}</td>
-            <td>{{ paciente.nombre }}</td>
-            <td>{{ paciente.motivo }}</td>
+            <td>{{ bloque.hora_inicio|time:"H:i" }} - {{ bloque.hora_fin|time:"H:i" }}</td>
+            <td>Dr/a. {{ bloque.medico.first_name }} {{ bloque.medico.last_name }}</td>
+            <td>{{ bloque.especialidad.nombre }}</td>
+            <td>
+                <form method="POST" action="{% url 'confirmar_reserva' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="bloque_id" value="{{ bloque.id }}">
+                    <button type="submit" class="btn btn-success btn-sm">Reservar</button>
+                </form>
+            </td>
         </tr>
         {% empty %}
-        <tr>
-            <td colspan="3">No hay pacientes agendados</td>
-        </tr>
+        <tr><td colspan="4" class="text-center">No hay turnos disponibles para esta fecha.</td></tr>
         {% endfor %}
     </tbody>
 </table>

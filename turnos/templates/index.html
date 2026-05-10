@@ -12,18 +12,9 @@
         <label class="form-label">Especialidad</label>
         <select name="especialidad" class="form-control" required>
             <option value="">Seleccione...</option>
-            <option>Cardiología</option>
-            <option>Dermatología</option>
-            <option>Traumatología</option>
-            <option>Pediatría</option>
-            <option>Neurología</option>
-            <option>Ginecología</option>
-            <option>Oftalmología</option>
-            <option>Otorrinolaringología</option>
-            <option>Medicina General</option>
-            <option>Psicología</option>
-            <option>Psiquiatría</option>
-            <option>Kinesiología</option>
+            {% for esp in especialidades %}
+                <option value="{{ esp.id }}">{{ esp.nombre }}</option>
+            {% endfor %}
         </select>
     </div>
 
