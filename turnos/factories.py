@@ -3,8 +3,9 @@ from .models import Usuario
 
 class UsuarioFactory:
     """
-    Patrón Creacional: Factory Method.
-    Centraliza y estandariza la creación de usuarios según su rol.
+    Patrón Creacional: Simple Factory.
+    Centraliza y estandariza la creación de usuarios según su rol,
+    encapsulando la lógica de validación y hasheo de contraseña.
     """
     @staticmethod
     def crear_usuario(tipo_rol, rut, username, password, first_name='', last_name='', email=''):
