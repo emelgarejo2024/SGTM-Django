@@ -12,3 +12,14 @@ def api_obtener_especialidades(request):
     
     # Retornamos el JSON. safe=False permite enviar listas u otros objetos no-diccionario en el root.
     return JsonResponse({'especialidades': especialidades_lista}, safe=False)
+
+def index(request):
+    especialidad = request.GET.get('especialidad')
+    fecha = request.GET.get('fecha')
+
+    contexto = {
+        'especialidad': especialidad,
+        'fecha': fecha
+    }
+
+    return render(request, 'index.html', contexto)

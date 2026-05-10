@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+
+<h2>Buscar Turnos Médicos</h2>
+
+<form method="GET" action="">
+    
+    <div class="mb-3">
+        <label class="form-label">Especialidad</label>
+        <select name="especialidad" class="form-control" required>
+            <option value="">Seleccione...</option>
+            <option>Cardiología</option>
+            <option>Dermatología</option>
+            <option>Traumatología</option>
+            <option>Pediatría</option>
+            <option>Neurología</option>
+            <option>Ginecología</option>
+            <option>Oftalmología</option>
+            <option>Otorrinolaringología</option>
+            <option>Medicina General</option>
+            <option>Psicología</option>
+            <option>Psiquiatría</option>
+            <option>Kinesiología</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Fecha</label>
+        <input type="date" name="fecha" class="form-control" required>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Buscar</button>
+
+</form>
+
+{% if especialidad and fecha %}
+    <div class="alert alert-success mt-4">
+        <strong>Búsqueda realizada:</strong><br>
+        Especialidad: {{ especialidad }}<br>
+        Fecha: {{ fecha }}
+    </div>
+{% endif %}
+
+{% endblock %}
