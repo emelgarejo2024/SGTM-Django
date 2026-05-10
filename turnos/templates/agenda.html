@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Agenda{% endblock %}
+
+{% block content %}
+
+<h2>Agenda del Médico</h2>
+
+<p><strong>Especialidad:</strong> {{ especialidad }}</p>
+<p><strong>Fecha:</strong> {{ fecha }}</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Hora</th>
+            <th>Paciente</th>
+            <th>Motivo</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for paciente in pacientes %}
+        <tr>
+            <td>{{ paciente.hora }}</td>
+            <td>{{ paciente.nombre }}</td>
+            <td>{{ paciente.motivo }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="3">No hay pacientes agendados</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="/" class="btn btn-secondary">Volver</a>
+
+{% endblock %}

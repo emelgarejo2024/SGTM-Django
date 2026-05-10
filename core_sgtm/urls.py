@@ -14,14 +14,18 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-# core_sgtm/urls.py
+
+
 from django.contrib import admin
-from django.urls import path
-from turnos.views import api_obtener_especialidades # Importamos la API
+from django.urls import path, include
+from turnos.views import api_obtener_especialidades
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    
-    # Endpoint de nuestra API Interna
+
+    # API
     path('api/especialidades/', api_obtener_especialidades, name='api_especialidades'),
+
+    # APP
+    path('', include('turnos.urls')),  # 👈 esto conecta todo
 ]
