@@ -26,6 +26,6 @@ urlpatterns = [
     # API
     path('api/especialidades/', api_obtener_especialidades, name='api_especialidades'),
 
-    # Rutas de la app
-    path('', include('turnos.urls')),
+    # APP
+    path('', include('turnos.urls')),  # 👈 esto conecta todo
 ]
