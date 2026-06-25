@@ -15,9 +15,7 @@ lint:
 	flake8 .
 
 test:
-	$(MANAGE) test
+	pytest
 
 coverage:
-	coverage run --source='.' manage.py test
-	coverage xml -o coverage.xml
-	coverage report -m
+	pytest --cov=. --cov-report=xml
