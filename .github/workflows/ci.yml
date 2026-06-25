@@ -1,0 +1,38 @@
+name: SGTM CI Pipeline
+
+on:
+  push:
+    branches: ["main", "develop"]
+  pull_request:
+    branches: ["main", "develop"]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v3
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10" # Cambia esto a la versión que usen
+
+      - name: Instalar dependencias
+        run: make install
+
+      - name: Ejecutar Formatter (Black)
+        run: make format
+
+      - name: Ejecutar Linter (Flake8)
+        run: make lint
+
+      - name: Ejecutar Tests y Cobertura
+        run: make coverage
+
+      - name: Subir reporte de cobertura como artefacto
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage.xml
