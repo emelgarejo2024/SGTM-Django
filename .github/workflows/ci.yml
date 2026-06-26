@@ -1,0 +1,51 @@
+name: SGTM CI Pipeline
+
+on:
+  push:
+    branches: ["main", "develop"]
+  pull_request:
+    branches: ["main", "develop"]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4 # Actualizado a v4
+        with:
+          fetch-depth: 0 # Requerido obligatoriamente por SonarQube/SonarCloud
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5 # Actualizado a v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: make install
+
+      - name: Ejecutar Formatter (Black)
+        run: make format
+
+      - name: Ejecutar Linter (Flake8)
+        run: make lint
+
+      - name: Ejecutar Tests y Cobertura
+        run: make coverage
+
+      - name: Subir reporte de cobertura
+        uses: actions/upload-artifact@v4 # ¡El causante del error, actualizado a v4!
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+      - name: Analizar con SonarQube
+        uses: SonarSource/sonarqube-scan-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: "https://sonarqube.inf.uct.cl"
+        with:
+          args: >
+            -Dsonar.projectKey=sgtm_project
+            -Dsonar.python.coverage.reportPaths=coverage.xml
