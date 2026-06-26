@@ -5,4 +5,4 @@ exclude =
     */migrations/*,
     venv,
     env
-max-line-length = 79
+max-line-length = 100
