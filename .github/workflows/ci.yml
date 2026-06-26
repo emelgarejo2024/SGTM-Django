@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout del código
         uses: actions/checkout@v4 # Actualizado a v4
+        with:
+          fetch-depth: 0 # Requerido obligatoriamente por SonarQube/SonarCloud
 
       - name: Configurar Python
         uses: actions/setup-python@v5 # Actualizado a v5
@@ -38,10 +40,11 @@ jobs:
           path: coverage.xml
 
       - name: Analizar con SonarQube
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarqube-scan-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: "https://sonarqube.inf.uct.cl"
         with:
           args: >
             -Dsonar.projectKey=sgtm_project
