@@ -106,4 +106,4 @@ class TestModelos:
 
         resultado = str(reserva)
         assert 'Carlos' in resultado
-        assert 'RESERVADO' in resultado
+        assert 'RESERVADO' in resultado

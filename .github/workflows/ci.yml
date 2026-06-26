@@ -36,3 +36,13 @@ jobs:
         with:
           name: coverage-report
           path: coverage.xml
+
+      - name: Analizar con SonarQube
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Este token ya viene por defecto en GitHub
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=sgtm_project
+            -Dsonar.python.coverage.reportPaths=coverage.xml
