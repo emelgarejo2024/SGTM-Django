@@ -12,12 +12,12 @@ jobs:
 
     steps:
       - name: Checkout del código
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # Actualizado a v4
 
       - name: Configurar Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5 # Actualizado a v5
         with:
-          python-version: "3.10" # Cambia esto a la versión que usen
+          python-version: "3.10"
 
       - name: Instalar dependencias
         run: make install
@@ -31,8 +31,8 @@ jobs:
       - name: Ejecutar Tests y Cobertura
         run: make coverage
 
-      - name: Subir reporte de cobertura como artefacto
-        uses: actions/upload-artifact@v3
+      - name: Subir reporte de cobertura
+        uses: actions/upload-artifact@v4 # ¡El causante del error, actualizado a v4!
         with:
           name: coverage-report
           path: coverage.xml
@@ -40,7 +40,7 @@ jobs:
       - name: Analizar con SonarQube
         uses: SonarSource/sonarcloud-github-action@master
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Este token ya viene por defecto en GitHub
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
