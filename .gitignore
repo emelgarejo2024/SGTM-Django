@@ -4,6 +4,8 @@ __pycache__/
 *.pyc
 db.sqlite3
 poblar.py
+coverage.xml
+.coverage
 
 
 # Archivos temporales de consultas al council de LLMs
