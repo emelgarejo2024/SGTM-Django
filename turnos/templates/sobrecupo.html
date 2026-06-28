@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Registrar Sobrecupo{% endblock %}
+
+{% block content %}
+
+<!-- BREADCRUMB -->
+<nav aria-label="breadcrumb" class="animate-in" style="margin-bottom: 1.25rem;">
+    <ol style="display: flex; align-items: center; gap: 0.5rem; list-style: none; padding: 0; margin: 0; font-size: 0.85rem;">
+        <li>
+            <a href="/" style="color: var(--primary); text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.3rem;">
+                <i class="bi bi-house-door"></i> Inicio
+            </a>
+        </li>
+        <li style="color: var(--text-muted);"><i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i></li>
+        <li>
+            <a href="{% url 'calendario_global' %}" style="color: var(--primary); text-decoration: none; font-weight: 500;">Calendario Global</a>
+        </li>
+        <li style="color: var(--text-muted);"><i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i></li>
+        <li style="color: var(--text-secondary); font-weight: 500;">Sobrecupo</li>
+    </ol>
+</nav>
+
+<!-- HEADER -->
+<div class="animate-in" style="margin-bottom: 1.5rem;">
+    <h1 style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text-primary); margin-bottom: 0.35rem;">
+        <i class="bi bi-plus-circle" style="color: var(--primary);"></i> Registrar Sobrecupo
+    </h1>
+    <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0;">
+        Asignación excepcional de un turno en un bloque sin disponibilidad regular.
+    </p>
+</div>
+
+<!-- AVISO -->
+<div class="animate-in animate-in-delay-1" style="background: #FAEEDA; border: 1px solid #EF9F27; color: #854F0B; padding: 0.85rem 1.1rem; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1.25rem;" data-testid="aviso-sobrecupo">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    Esta acción ignora el límite de disponibilidad regular del bloque y requiere registrar un motivo administrativo o clínico (BR-31).
+</div>
+
+<div class="sgtm-card animate-in animate-in-delay-2" data-testid="card-sobrecupo">
+    <div class="sgtm-card-header">
+        <h2 style="font-size: 1rem; font-weight: 700; color: var(--primary-dark); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="bi bi-calendar2-plus"></i> Datos del sobrecupo
+        </h2>
+    </div>
+    <div class="sgtm-card-body">
+
+        {% if bloque %}
+        <div style="background: var(--primary-subtle); border-radius: 8px; padding: 0.85rem 1rem; margin-bottom: 1.25rem;" data-testid="resumen-bloque-sobrecupo">
+            <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.88rem;">
+                <span><i class="bi bi-calendar3"></i> <strong>{{ bloque.fecha|date:"d/m/Y" }}</strong></span>
+                <span><i class="bi bi-clock"></i> {{ bloque.hora_inicio|time:"H:i" }} — {{ bloque.hora_fin|time:"H:i" }}</span>
+                <span><i class="bi bi-person-badge"></i> Dr/a. {{ bloque.medico.first_name }} {{ bloque.medico.last_name }}</span>
+                <span><i class="bi bi-clipboard2-pulse"></i> {{ bloque.especialidad.nombre }}</span>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ALERTA DE ERROR -->
+        <div id="alerta-sobrecupo" data-testid="alerta-sobrecupo" style="display: none; background: #FEF2F2; border: 1px solid #FCA5A5; color: #991B1B; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1rem;">
+            <i class="bi bi-exclamation-circle-fill"></i>
+            <span id="texto-alerta-sobrecupo"></span>
+        </div>
+
+        <form method="POST" action="{% url 'registrar_sobrecupo' %}" id="form-sobrecupo" data-testid="form-sobrecupo">
+            {% csrf_token %}
+            <input type="hidden" name="bloque_id" value="{{ bloque.id }}">
+
+            <div class="mb-3">
+                <label class="form-label-sgtm" for="input-rut-sobrecupo"><i class="bi bi-person-badge"></i> RUT del paciente</label>
+                <input
+                    type="text"
+                    id="input-rut-sobrecupo"
+                    name="rut_paciente"
+                    class="form-control form-control-sgtm"
+                    placeholder="12345678-9"
+                    data-testid="input-rut-sobrecupo"
+                    required
+                >
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label-sgtm" for="select-tipo-motivo-sobrecupo"><i class="bi bi-tag"></i> Tipo de motivo</label>
+                <select id="select-tipo-motivo-sobrecupo" name="tipo_motivo" class="form-control form-control-sgtm" data-testid="select-tipo-motivo-sobrecupo" required>
+                    <option value="">Seleccione un tipo</option>
+                    <option value="CLINICO">Clínico</option>
+                    <option value="ADMINISTRATIVO">Administrativo</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label-sgtm" for="textarea-motivo-sobrecupo"><i class="bi bi-card-text"></i> Justificación</label>
+                <textarea
+                    id="textarea-motivo-sobrecupo"
+                    name="motivo"
+                    class="form-control form-control-sgtm"
+                    rows="3"
+                    placeholder="Describa el motivo del sobrecupo..."
+                    data-testid="textarea-motivo-sobrecupo"
+                    required
+                ></textarea>
+            </div>
+
+            <button type="submit" class="btn-sgtm w-100" data-testid="btn-confirmar-sobrecupo">
+                <i class="bi bi-check-lg"></i> Confirmar sobrecupo
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="mt-3 animate-in animate-in-delay-2">
+    <a href="{% url 'calendario_global' %}" class="btn-sgtm-outline">
+        <i class="bi bi-arrow-left"></i> Volver al calendario
+    </a>
+</div>
+
+<script>
+document.getElementById("form-sobrecupo").addEventListener("submit", function (evento) {
+    const alerta = document.getElementById("alerta-sobrecupo");
+    alerta.style.display = "none";
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Reagendar Turno{% endblock %}
+
+{% block content %}
+
+<!-- BREADCRUMB -->
+<nav aria-label="breadcrumb" class="animate-in" style="margin-bottom: 1.25rem;">
+    <ol style="display: flex; align-items: center; gap: 0.5rem; list-style: none; padding: 0; margin: 0; font-size: 0.85rem;">
+        <li>
+            <a href="/" style="color: var(--primary); text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.3rem;">
+                <i class="bi bi-house-door"></i> Inicio
+            </a>
+        </li>
+        <li style="color: var(--text-muted);"><i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i></li>
+        <li>
+            <a href="{% url 'historial' %}" style="color: var(--primary); text-decoration: none; font-weight: 500;">
+                Mi Historial
+            </a>
+        </li>
+        <li style="color: var(--text-muted);"><i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i></li>
+        <li style="color: var(--text-secondary); font-weight: 500;">Reagendar</li>
+    </ol>
+</nav>
+
+<!-- HEADER -->
+<div class="animate-in" style="margin-bottom: 1.5rem;">
+    <h1 style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text-primary); margin-bottom: 0.35rem;">
+        <i class="bi bi-arrow-repeat" style="color: var(--primary);"></i> Reagendar Turno
+    </h1>
+    <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0;">
+        Seleccione un nuevo horario. Su turno actual se liberará automáticamente al confirmar.
+    </p>
+</div>
+
+<!-- TURNO ACTUAL (A LIBERAR) -->
+<div class="sgtm-card animate-in animate-in-delay-1" data-testid="card-turno-original" style="margin-bottom: 1.25rem; border-left: 3px solid var(--text-muted);">
+    <div class="sgtm-card-header">
+        <h2 style="font-size: 1rem; font-weight: 700; color: var(--text-secondary); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="bi bi-calendar-x"></i> Turno actual (se liberará al confirmar)
+        </h2>
+    </div>
+    <div class="sgtm-card-body">
+        <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; font-size: 0.9rem;">
+            <span data-testid="original-fecha">
+                <i class="bi bi-calendar3" style="color: var(--text-muted);"></i>
+                <strong>{{ turno_original.bloque.fecha|date:"d/m/Y" }}</strong>
+            </span>
+            <span data-testid="original-horario">
+                <i class="bi bi-clock" style="color: var(--text-muted);"></i>
+                {{ turno_original.bloque.hora_inicio|time:"H:i" }} — {{ turno_original.bloque.hora_fin|time:"H:i" }}
+            </span>
+            <span data-testid="original-medico">
+                <i class="bi bi-person-badge" style="color: var(--text-muted);"></i>
+                Dr/a. {{ turno_original.bloque.medico.first_name }} {{ turno_original.bloque.medico.last_name }}
+            </span>
+            <span data-testid="original-especialidad" style="background: var(--primary-subtle); color: var(--primary-dark); font-size: 0.78rem; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 20px;">
+                {{ turno_original.bloque.especialidad.nombre }}
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- NUEVOS HORARIOS DISPONIBLES -->
+<div class="sgtm-card animate-in animate-in-delay-2" data-testid="card-nuevos-horarios">
+    <div class="sgtm-card-header" style="display: flex; align-items: center; justify-content: space-between;">
+        <h2 style="font-size: 1rem; font-weight: 700; color: var(--primary-dark); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="bi bi-calendar2-week"></i>
+            Nuevos horarios disponibles
+        </h2>
+        <span style="font-size: 0.85rem; color: var(--text-secondary);">
+            Dr/a. {{ turno_original.bloque.medico.first_name }} {{ turno_original.bloque.medico.last_name }} · {{ turno_original.bloque.especialidad.nombre }}
+        </span>
+    </div>
+
+    <!-- FILTRO DE FECHA -->
+    <div class="sgtm-card-body" style="border-bottom: 1px solid var(--border-color, #eee);">
+        <form method="GET" action="{% url 'reagendar_turno' turno_original.id %}" id="form-buscar-nuevo-horario" data-testid="form-buscar-nuevo-horario">
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label-sgtm" for="input-fecha-nuevo-horario">
+                        <i class="bi bi-calendar3"></i> Buscar otra fecha
+                    </label>
+                    <input
+                        type="date"
+                        id="input-fecha-nuevo-horario"
+                        name="fecha"
+                        class="form-control form-control-sgtm"
+                        value="{{ fecha_buscada|default:'' }}"
+                        data-testid="input-fecha-nuevo-horario"
+                    >
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn-sgtm w-100" data-testid="btn-buscar-nuevo-horario">
+                        <i class="bi bi-search"></i> Buscar
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    {% if bloques_disponibles %}
+    <div style="overflow-x: auto;">
+        <table class="sgtm-table" data-testid="tabla-nuevos-horarios">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-calendar3"></i> Fecha</th>
+                    <th><i class="bi bi-clock"></i> Horario</th>
+                    <th style="text-align: center;"><i class="bi bi-check2-circle"></i> Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bloque in bloques_disponibles %}
+                <tr class="animate-in" style="animation-delay: {{ forloop.counter0 }}00ms;" data-testid="fila-nuevo-horario-{{ bloque.id }}">
+                    <td style="font-weight: 600;">{{ bloque.fecha|date:"d/m/Y" }}</td>
+                    <td>
+                        <span style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">
+                            {{ bloque.hora_inicio|time:"H:i" }}
+                        </span>
+                        <span style="color: var(--text-muted); margin: 0 0.25rem;">—</span>
+                        <span style="color: var(--text-secondary);">
+                            {{ bloque.hora_fin|time:"H:i" }}
+                        </span>
+                    </td>
+                    <td style="text-align: center;">
+                        <form method="POST" action="{% url 'confirmar_reagendamiento' %}" style="display: inline;" onsubmit="return confirm('¿Confirma el cambio de horario? Su turno actual será liberado.');">
+                            {% csrf_token %}
+                            <input type="hidden" name="turno_original_id" value="{{ turno_original.id }}">
+                            <input type="hidden" name="nuevo_bloque_id" value="{{ bloque.id }}">
+                            <button type="submit" class="btn-reservar" data-testid="btn-confirmar-reagendamiento-{{ bloque.id }}">
+                                <i class="bi bi-arrow-repeat"></i> Elegir este horario
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state" data-testid="nuevos-horarios-sin-resultados">
+        <i class="bi bi-calendar-x d-block"></i>
+        <p>No hay otros horarios disponibles para este médico en la fecha indicada.</p>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">Intente seleccionar otra fecha.</span>
+    </div>
+    {% endif %}
+</div>
+
+<!-- BACK BUTTON -->
+<div class="mt-3 animate-in animate-in-delay-2">
+    <a href="{% url 'historial' %}" class="btn-sgtm-outline" data-testid="btn-volver-historial">
+        <i class="bi bi-arrow-left"></i> Volver sin reagendar
+    </a>
+</div>
+
+{% endblock %}

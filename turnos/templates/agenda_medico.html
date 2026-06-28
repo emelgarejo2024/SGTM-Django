@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Mi Agenda{% endblock %}
+
+{% block content %}
+
+<!-- BREADCRUMB -->
+<nav aria-label="breadcrumb" class="animate-in" style="margin-bottom: 1.25rem;">
+    <ol style="display: flex; align-items: center; gap: 0.5rem; list-style: none; padding: 0; margin: 0; font-size: 0.85rem;">
+        <li>
+            <a href="/" style="color: var(--primary); text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.3rem;">
+                <i class="bi bi-house-door"></i> Inicio
+            </a>
+        </li>
+        <li style="color: var(--text-muted);"><i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i></li>
+        <li style="color: var(--text-secondary); font-weight: 500;">Mi Agenda</li>
+    </ol>
+</nav>
+
+<!-- HEADER -->
+<div class="animate-in" style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h1 style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text-primary); margin-bottom: 0.35rem;">
+            <i class="bi bi-calendar2-check" style="color: var(--primary);"></i> Mi Agenda — Hoy
+        </h1>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0;" data-testid="fecha-agenda-medico">
+            {{ fecha_hoy|date:"l d \\d\\e F \\d\\e Y" }}
+        </p>
+    </div>
+    <a href="{% url 'config_disponibilidad' %}" class="btn-sgtm-outline" data-testid="link-configurar-disponibilidad">
+        <i class="bi bi-calendar2-range"></i> Configurar disponibilidad
+    </a>
+</div>
+
+<!-- AGENDA TIMELINE -->
+<div class="sgtm-card animate-in animate-in-delay-1" data-testid="card-agenda-medico" id="agenda-medico-container" data-polling-url="{% url 'agenda_medico_json' %}">
+    <div class="sgtm-card-header" style="display: flex; align-items: center; justify-content: space-between;">
+        <h2 style="font-size: 1rem; font-weight: 700; color: var(--primary-dark); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="bi bi-list-ol"></i> Orden de atención
+        </h2>
+        {% if turnos_hoy %}
+        <span class="badge-disponible">{{ turnos_hoy|length }} paciente{{ turnos_hoy|length|pluralize:"s" }}</span>
+        {% endif %}
+    </div>
+
+    {% if turnos_hoy %}
+    <div style="overflow-x: auto;">
+        <table class="sgtm-table" data-testid="tabla-agenda-medico">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-clock"></i> Horario</th>
+                    <th><i class="bi bi-person"></i> Paciente</th>
+                    <th><i class="bi bi-info-circle"></i> Estado</th>
+                    <th style="text-align: center;"><i class="bi bi-check2-square"></i> Asistencia</th>
+                </tr>
+            </thead>
+            <tbody id="tbody-agenda-medico">
+                {% for turno in turnos_hoy %}
+                <tr class="animate-in" style="animation-delay: {{ forloop.counter0 }}00ms;" data-testid="fila-agenda-medico-{{ turno.id }}">
+                    <td style="font-weight: 700;">{{ turno.bloque.hora_inicio|time:"H:i" }}</td>
+                    <td>
+                        {% if turno.paciente %}
+                            {{ turno.paciente.get_full_name }}
+                        {% else %}
+                            <span style="color: var(--text-muted);">— Bloque disponible —</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge-estado badge-estado-{{ turno.estado|lower }}" data-testid="estado-agenda-medico-{{ turno.id }}">
+                            {{ turno.get_estado_display }}
+                        </span>
+                    </td>
+                    <td style="text-align: center;">
+                        {% if turno.estado == "EN_SALA_ESPERA" %}
+                        <div style="display: flex; gap: 0.4rem; justify-content: center;">
+                            <form method="POST" action="{% url 'marcar_asistencia' %}" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="turno_id" value="{{ turno.id }}">
+                                <input type="hidden" name="asistio" value="true">
+                                <button type="submit" class="btn-reservar" data-testid="btn-asistio-{{ turno.id }}" title="Marcar como asistió">
+                                    <i class="bi bi-check-lg"></i>
+                                </button>
+                            </form>
+                            <form method="POST" action="{% url 'marcar_asistencia' %}" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="turno_id" value="{{ turno.id }}">
+                                <input type="hidden" name="asistio" value="false">
+                                <button type="submit" class="btn-cancelar" data-testid="btn-no-asistio-{{ turno.id }}" title="Marcar como no asistió">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </form>
+                        </div>
+                        {% elif turno.estado == "EJECUTADO" or turno.estado == "NO_SHOW" %}
+                        <span style="font-size: 0.78rem; color: var(--text-muted);" data-testid="asistencia-ya-registrada-{{ turno.id }}">
+                            Ya registrado
+                        </span>
+                        {% else %}
+                        <span style="font-size: 0.78rem; color: var(--text-muted);" data-testid="asistencia-pendiente-checkin-{{ turno.id }}">
+                            Esperando check-in
+                        </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state" data-testid="agenda-medico-vacia">
+        <i class="bi bi-calendar-x d-block"></i>
+        <p>No tiene pacientes agendados para hoy.</p>
+        <a href="{% url 'config_disponibilidad' %}" class="btn-sgtm" style="margin-top: 0.75rem; display: inline-flex;">
+            <i class="bi bi-calendar2-range"></i> Configurar disponibilidad
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+const URL_POLLING_AGENDA = document.getElementById("agenda-medico-container").dataset.pollingUrl;
+const INTERVALO_POLLING_MS = 5000;
+
+async function actualizarAgendaMedico() {
+    try {
+        const respuesta = await fetch(URL_POLLING_AGENDA);
+        if (!respuesta.ok) return;
+        const datos = await respuesta.json();
+
+        datos.turnos.forEach(function (turno) {
+            const fila = document.querySelector(`[data-testid="fila-agenda-medico-${turno.id}"]`);
+            if (!fila) return;
+            const celdaEstado = fila.querySelector(`[data-testid="estado-agenda-medico-${turno.id}"]`);
+            if (celdaEstado && celdaEstado.textContent.trim() !== turno.estado_display) {
+                celdaEstado.textContent = turno.estado_display;
+                celdaEstado.className = `badge-estado badge-estado-${turno.estado.toLowerCase()}`;
+            }
+        });
+    } catch (error) {
+        console.error("No se pudo actualizar la agenda en tiempo real:", error);
+    }
+}
+
+setInterval(actualizarAgendaMedico, INTERVALO_POLLING_MS);
+</script>
+
+{% endblock %}

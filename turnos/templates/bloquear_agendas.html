@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Bloquear Agenda{% endblock %}
+
+{% block content %}
+
+<!-- BREADCRUMB -->
+<nav aria-label="breadcrumb" class="animate-in" style="margin-bottom: 1.25rem;">
+    <ol style="display: flex; align-items: center; gap: 0.5rem; list-style: none; padding: 0; margin: 0; font-size: 0.85rem;">
+        <li>
+            <a href="/" style="color: var(--primary); text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.3rem;">
+                <i class="bi bi-house-door"></i> Inicio
+            </a>
+        </li>
+        <li style="color: var(--text-muted);"><i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i></li>
+        <li>
+            <a href="{% url 'config_disponibilidad' %}" style="color: var(--primary); text-decoration: none; font-weight: 500;">Mi Disponibilidad</a>
+        </li>
+        <li style="color: var(--text-muted);"><i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i></li>
+        <li style="color: var(--text-secondary); font-weight: 500;">Bloquear Agenda</li>
+    </ol>
+</nav>
+
+<!-- HEADER -->
+<div class="animate-in" style="margin-bottom: 1.5rem;">
+    <h1 style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text-primary); margin-bottom: 0.35rem;">
+        <i class="bi bi-calendar-x" style="color: var(--primary);"></i> Bloquear Tramos de Agenda
+    </h1>
+    <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0;">
+        Seleccione bloques sin citas reservadas para marcarlos como no disponibles (vacaciones, reuniones, etc.).
+    </p>
+</div>
+
+<!-- FILTER -->
+<div class="sgtm-card animate-in animate-in-delay-1" style="margin-bottom: 1.25rem;">
+    <div class="sgtm-card-body">
+        <form method="GET" action="{% url 'bloquear_agenda' %}" id="form-filtro-bloqueo" data-testid="form-filtro-bloqueo">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label-sgtm" for="input-fecha-desde-bloqueo"><i class="bi bi-calendar3"></i> Desde</label>
+                    <input type="date" id="input-fecha-desde-bloqueo" name="fecha_desde" class="form-control form-control-sgtm" value="{{ fecha_desde|default:'' }}" data-testid="input-fecha-desde-bloqueo">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label-sgtm" for="input-fecha-hasta-bloqueo"><i class="bi bi-calendar3"></i> Hasta</label>
+                    <input type="date" id="input-fecha-hasta-bloqueo" name="fecha_hasta" class="form-control form-control-sgtm" value="{{ fecha_hasta|default:'' }}" data-testid="input-fecha-hasta-bloqueo">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn-sgtm w-100" data-testid="btn-buscar-bloques-bloqueo">
+                        <i class="bi bi-search"></i> Buscar bloques
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- AVISO -->
+<div class="animate-in animate-in-delay-1" style="background: #FAEEDA; border: 1px solid #EF9F27; color: #854F0B; padding: 0.85rem 1.1rem; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1.25rem;">
+    <i class="bi bi-info-circle-fill"></i>
+    Solo se muestran bloques sin reservas activas. Los bloques con citas confirmadas no pueden bloquearse desde aquí.
+</div>
+
+<!-- FORM MASIVO -->
+<div class="sgtm-card animate-in animate-in-delay-2" data-testid="card-bloques-para-bloquear">
+    <div class="sgtm-card-header" style="display: flex; align-items: center; justify-content: space-between;">
+        <h2 style="font-size: 1rem; font-weight: 700; color: var(--primary-dark); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="bi bi-list-check"></i> Bloques disponibles para bloquear
+        </h2>
+        {% if bloques_bloqueables %}
+        <label style="font-size: 0.82rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer;" for="seleccionar-todos">
+            <input type="checkbox" id="seleccionar-todos" data-testid="checkbox-seleccionar-todos">
+            Seleccionar todos
+        </label>
+        {% endif %}
+    </div>
+
+    {% if bloques_bloqueables %}
+    <form method="POST" action="{% url 'confirmar_bloqueo_agenda' %}" id="form-bloqueo-masivo" data-testid="form-bloqueo-masivo">
+        {% csrf_token %}
+        <div style="overflow-x: auto;">
+            <table class="sgtm-table" data-testid="tabla-bloques-bloqueables">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;"></th>
+                        <th><i class="bi bi-calendar3"></i> Fecha</th>
+                        <th><i class="bi bi-clock"></i> Horario</th>
+                        <th><i class="bi bi-clipboard2-pulse"></i> Especialidad</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bloque in bloques_bloqueables %}
+                    <tr data-testid="fila-bloqueable-{{ bloque.id }}">
+                        <td>
+                            <input
+                                type="checkbox"
+                                name="bloques_ids"
+                                value="{{ bloque.id }}"
+                                id="checkbox-bloque-{{ bloque.id }}"
+                                class="checkbox-bloque"
+                                aria-label="Seleccionar bloque del {{ bloque.fecha|date:'d/m/Y' }} de {{ bloque.hora_inicio|time:'H:i' }} a {{ bloque.hora_fin|time:'H:i' }}"
+                                data-testid="checkbox-bloque-{{ bloque.id }}"
+                            >
+                        </td>
+                        <td>{{ bloque.fecha|date:"d/m/Y" }}</td>
+                        <td>{{ bloque.hora_inicio|time:"H:i" }} — {{ bloque.hora_fin|time:"H:i" }}</td>
+                        <td>
+                            <span style="background: var(--primary-subtle); color: var(--primary-dark); font-size: 0.78rem; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 20px;">
+                                {{ bloque.especialidad.nombre }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="sgtm-card-body" style="border-top: 1px solid #eee;">
+            <div class="mb-3">
+                <label class="form-label-sgtm" for="input-motivo-bloqueo"><i class="bi bi-card-text"></i> Motivo del bloqueo (opcional)</label>
+                <input type="text" id="input-motivo-bloqueo" name="motivo_bloqueo" class="form-control form-control-sgtm" placeholder="Ej: Vacaciones, capacitación, reunión clínica..." data-testid="input-motivo-bloqueo">
+            </div>
+            <button type="submit" class="btn-cancelar" data-testid="btn-confirmar-bloqueo-masivo">
+                <i class="bi bi-lock-fill"></i> Bloquear seleccionados
+            </button>
+        </div>
+    </form>
+    {% else %}
+    <div class="empty-state" data-testid="bloqueables-sin-resultados">
+        <i class="bi bi-calendar-check d-block"></i>
+        <p>No hay bloques sin reservas en el rango seleccionado.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+const checkboxTodos = document.getElementById("seleccionar-todos");
+if (checkboxTodos) {
+    checkboxTodos.addEventListener("change", function () {
+        document.querySelectorAll(".checkbox-bloque").forEach(function (casilla) {
+            casilla.checked = checkboxTodos.checked;
+        });
+    });
+}
+</script>
+
+{% endblock %}

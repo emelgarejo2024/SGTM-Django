@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Configurar Disponibilidad{% endblock %}
+
+{% block content %}
+
+<!-- BREADCRUMB -->
+<nav aria-label="breadcrumb" class="animate-in" style="margin-bottom: 1.25rem;">
+    <ol style="display: flex; align-items: center; gap: 0.5rem; list-style: none; padding: 0; margin: 0; font-size: 0.85rem;">
+        <li>
+            <a href="/" style="color: var(--primary); text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.3rem;">
+                <i class="bi bi-house-door"></i> Inicio
+            </a>
+        </li>
+        <li style="color: var(--text-muted);"><i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i></li>
+        <li style="color: var(--text-secondary); font-weight: 500;">Mi Disponibilidad</li>
+    </ol>
+</nav>
+
+<!-- HEADER -->
+<div class="animate-in" style="margin-bottom: 1.5rem;">
+    <h1 style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text-primary); margin-bottom: 0.35rem;">
+        <i class="bi bi-calendar2-range" style="color: var(--primary);"></i> Configurar Disponibilidad
+    </h1>
+    <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0;">
+        Defina sus horarios de atención. El sistema generará automáticamente los bloques individuales.
+    </p>
+</div>
+
+<div class="row g-3">
+    <!-- FORM: NUEVO RANGO -->
+    <div class="col-md-5">
+        <div class="sgtm-card animate-in animate-in-delay-1">
+            <div class="sgtm-card-header">
+                <h2 style="font-size: 1rem; font-weight: 700; color: var(--primary-dark); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="bi bi-plus-square"></i> Nuevo rango de atención
+                </h2>
+            </div>
+            <div class="sgtm-card-body">
+
+                <div id="alerta-disponibilidad" data-testid="alerta-disponibilidad" style="display: none; background: #FEF2F2; border: 1px solid #FCA5A5; color: #991B1B; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1rem;">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    <span id="texto-alerta-disponibilidad"></span>
+                </div>
+
+                <form method="POST" action="{% url 'config_disponibilidad' %}" id="form-disponibilidad" data-testid="form-disponibilidad">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label-sgtm" for="input-fecha-disponibilidad"><i class="bi bi-calendar3"></i> Fecha</label>
+                        <input
+                            type="date"
+                            id="input-fecha-disponibilidad"
+                            name="fecha"
+                            class="form-control form-control-sgtm"
+                            min="{{ fecha_minima }}"
+                            data-testid="input-fecha-disponibilidad"
+                            required
+                        >
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label-sgtm" for="input-hora-inicio-disponibilidad"><i class="bi bi-clock"></i> Desde</label>
+                            <input type="time" id="input-hora-inicio-disponibilidad" name="hora_inicio" class="form-control form-control-sgtm" min="08:00" max="20:00" value="08:00" data-testid="input-hora-inicio-disponibilidad" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label-sgtm" for="input-hora-fin-disponibilidad"><i class="bi bi-clock-fill"></i> Hasta</label>
+                            <input type="time" id="input-hora-fin-disponibilidad" name="hora_fin" class="form-control form-control-sgtm" min="08:00" max="20:00" value="12:00" data-testid="input-hora-fin-disponibilidad" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label-sgtm" for="select-duracion-disponibilidad"><i class="bi bi-hourglass-split"></i> Duración por consulta</label>
+                        <select id="select-duracion-disponibilidad" name="duracion_minutos" class="form-control form-control-sgtm" data-testid="select-duracion-disponibilidad">
+                            <option value="15">15 minutos</option>
+                            <option value="20" selected>20 minutos</option>
+                            <option value="30">30 minutos</option>
+                            <option value="45">45 minutos</option>
+                            <option value="60">60 minutos</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label-sgtm" for="select-especialidad-disponibilidad"><i class="bi bi-clipboard2-pulse"></i> Especialidad</label>
+                        <select id="select-especialidad-disponibilidad" name="especialidad" class="form-control form-control-sgtm" data-testid="select-especialidad-disponibilidad" required>
+                            {% for esp in especialidades_medico %}
+                            <option value="{{ esp.id }}">{{ esp.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-sgtm w-100" data-testid="btn-generar-bloques">
+                        <i class="bi bi-magic"></i> Generar bloques
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- LISTA DE BLOQUES EXISTENTES -->
+    <div class="col-md-7">
+        <div class="sgtm-card animate-in animate-in-delay-2" data-testid="card-bloques-existentes">
+            <div class="sgtm-card-header">
+                <h2 style="font-size: 1rem; font-weight: 700; color: var(--primary-dark); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="bi bi-list-check"></i> Mis bloques configurados
+                </h2>
+            </div>
+
+            {% if bloques %}
+            <div style="overflow-x: auto;">
+                <table class="sgtm-table" data-testid="tabla-bloques-disponibilidad">
+                    <thead>
+                        <tr>
+                            <th><i class="bi bi-calendar3"></i> Fecha</th>
+                            <th><i class="bi bi-clock"></i> Horario</th>
+                            <th><i class="bi bi-info-circle"></i> Estado</th>
+                            <th style="text-align: center;"><i class="bi bi-gear"></i> Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bloque in bloques %}
+                        <tr data-testid="fila-bloque-disp-{{ bloque.id }}">
+                            <td>{{ bloque.fecha|date:"d/m/Y" }}</td>
+                            <td>{{ bloque.hora_inicio|time:"H:i" }} — {{ bloque.hora_fin|time:"H:i" }}</td>
+                            <td>
+                                {% if bloque.esta_disponible %}
+                                <span class="badge-disponible">Disponible</span>
+                                {% else %}
+                                <span style="font-size: 0.78rem; color: var(--text-muted);">Con reserva</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align: center;">
+                                {% if bloque.esta_disponible %}
+                                <form method="POST" action="{% url 'bloquear_agenda' %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="bloque_id" value="{{ bloque.id }}">
+                                    <button type="submit" class="btn-cancelar" data-testid="btn-bloquear-{{ bloque.id }}" title="Bloquear este tramo">
+                                        <i class="bi bi-lock"></i>
+                                    </button>
+                                </form>
+                                {% else %}
+                                <span style="font-size: 0.78rem; color: var(--text-muted);" data-testid="bloque-no-editable-{{ bloque.id }}">
+                                    No editable
+                                </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state" data-testid="bloques-disponibilidad-vacio">
+                <i class="bi bi-calendar-x d-block"></i>
+                <p>Aún no ha configurado bloques de disponibilidad.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

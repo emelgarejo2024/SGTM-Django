@@ -3,7 +3,7 @@ from datetime import date, time, timedelta
 from django.core.exceptions import ValidationError
 from turnos.models import Especialidad, BloqueDisponibilidad, Reserva
 from turnos.factories import UsuarioFactory
-
+from django.urls import reverse
 
 @pytest.mark.django_db
 class TestModelos:
@@ -139,3 +139,8 @@ class TestModelos:
         resultado = str(reserva)
         assert "Carlos" in resultado
         assert "RESERVADO" in resultado
+
+    def test_api_especialidades_vacia(self, client):
+        response = client.get(reverse("api_especialidades"))
+        assert response.status_code == 200
+        assert response.json()["especialidades"] == []

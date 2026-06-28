@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}Panel de Reportes{% endblock %}
+
+{% block content %}
+
+<!-- BREADCRUMB -->
+<nav aria-label="breadcrumb" class="animate-in" style="margin-bottom: 1.25rem;">
+    <ol style="display: flex; align-items: center; gap: 0.5rem; list-style: none; padding: 0; margin: 0; font-size: 0.85rem;">
+        <li>
+            <a href="/" style="color: var(--primary); text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.3rem;">
+                <i class="bi bi-house-door"></i> Inicio
+            </a>
+        </li>
+        <li style="color: var(--text-muted);"><i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i></li>
+        <li style="color: var(--text-secondary); font-weight: 500;">Reportes</li>
+    </ol>
+</nav>
+
+<!-- HEADER -->
+<div class="animate-in" style="margin-bottom: 1.5rem;">
+    <h1 style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text-primary); margin-bottom: 0.35rem;">
+        <i class="bi bi-bar-chart-line" style="color: var(--primary);"></i> Panel de Reportes
+    </h1>
+    <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0;">
+        Métricas de ocupación de agenda y ausentismo de pacientes (No-shows).
+    </p>
+</div>
+
+<!-- FILTER CARD -->
+<div class="sgtm-card animate-in animate-in-delay-1" id="filter-card" style="margin-bottom: 1.25rem;">
+    <div class="sgtm-card-body">
+        <form method="GET" action="{% url 'reportes' %}" id="form-filtro-reportes" data-testid="form-filtro-reportes">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label-sgtm" for="input-mes-reporte">
+                        <i class="bi bi-calendar3"></i> Mes
+                    </label>
+                    <input
+                        type="month"
+                        id="input-mes-reporte"
+                        name="mes"
+                        class="form-control form-control-sgtm"
+                        value="{{ mes_seleccionado|default:'' }}"
+                        data-testid="input-mes-reporte"
+                    >
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label-sgtm" for="select-especialidad-reporte">
+                        <i class="bi bi-clipboard2-pulse"></i> Especialidad
+                    </label>
+                    <select name="especialidad" id="select-especialidad-reporte" class="form-control form-control-sgtm" data-testid="select-especialidad-reporte">
+                        <option value="">Todas las especialidades</option>
+                        {% for esp in especialidades %}
+                        <option value="{{ esp.id }}" {% if esp.id|stringformat:"s" == especialidad_seleccionada %}selected{% endif %}>
+                            {{ esp.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn-sgtm w-100" data-testid="btn-aplicar-filtro-reporte">
+                        <i class="bi bi-filter"></i> Aplicar filtro
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- KPI CARDS -->
+<div class="row g-3 animate-in animate-in-delay-2" style="margin-bottom: 1.25rem;">
+    <div class="col-md-3">
+        <div class="sgtm-card" data-testid="kpi-total-turnos">
+            <div class="sgtm-card-body text-center" style="padding: 1.5rem 1rem;">
+                <div style="font-size: 1.8rem; font-weight: 800; color: var(--primary);">{{ kpi_total_turnos|default:"0" }}</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Turnos totales</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="sgtm-card" data-testid="kpi-tasa-ocupacion">
+            <div class="sgtm-card-body text-center" style="padding: 1.5rem 1rem;">
+                <div style="font-size: 1.8rem; font-weight: 800; color: var(--success);">{{ kpi_tasa_ocupacion|default:"0" }}%</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Tasa de ocupación</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="sgtm-card" data-testid="kpi-no-shows">
+            <div class="sgtm-card-body text-center" style="padding: 1.5rem 1rem;">
+                <div style="font-size: 1.8rem; font-weight: 800; color: var(--accent);">{{ kpi_no_shows|default:"0" }}</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">No-shows del periodo</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="sgtm-card" data-testid="kpi-tasa-ausentismo">
+            <div class="sgtm-card-body text-center" style="padding: 1.5rem 1rem;">
+                <div style="font-size: 1.8rem; font-weight: 800; color: var(--danger, #D85A30);">{{ kpi_tasa_ausentismo|default:"0" }}%</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Tasa de ausentismo</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CHARTS -->
+<div class="row g-3 animate-in animate-in-delay-2">
+    <!-- OCUPACIÓN POR ESPECIALIDAD (FR-23) -->
+    <div class="col-md-6">
+        <div class="sgtm-card" style="height: 100%;" data-testid="chart-card-ocupacion">
+            <div class="sgtm-card-header">
+                <h2 style="font-size: 1rem; font-weight: 700; color: var(--primary-dark); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="bi bi-pie-chart"></i> Ocupación por especialidad
+                </h2>
+            </div>
+            <div class="sgtm-card-body">
+                {% if datos_ocupacion %}
+                <canvas id="chartOcupacion" data-testid="canvas-ocupacion" height="220"></canvas>
+                {% else %}
+                <div class="empty-state" data-testid="ocupacion-sin-datos">
+                    <i class="bi bi-bar-chart d-block"></i>
+                    <p>No hay datos de ocupación para el periodo seleccionado.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- AUSENTISMO MENSUAL (FR-24) -->
+    <div class="col-md-6">
+        <div class="sgtm-card" style="height: 100%;" data-testid="chart-card-ausentismo">
+            <div class="sgtm-card-header">
+                <h2 style="font-size: 1rem; font-weight: 700; color: var(--primary-dark); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="bi bi-graph-up"></i> Ausentismo mensual (No-shows)
+                </h2>
+            </div>
+            <div class="sgtm-card-body">
+                {% if datos_ausentismo %}
+                <canvas id="chartAusentismo" data-testid="canvas-ausentismo" height="220"></canvas>
+                {% else %}
+                <div class="empty-state" data-testid="ausentismo-sin-datos">
+                    <i class="bi bi-graph-up d-block"></i>
+                    <p>No hay datos de ausentismo para el periodo seleccionado.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TABLA DETALLE POR PROFESIONAL -->
+<div class="sgtm-card animate-in animate-in-delay-2" style="margin-top: 1.25rem;" data-testid="tabla-detalle-profesional">
+    <div class="sgtm-card-header">
+        <h2 style="font-size: 1rem; font-weight: 700; color: var(--primary-dark); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="bi bi-table"></i> Detalle por profesional
+        </h2>
+    </div>
+    {% if detalle_profesionales %}
+    <div style="overflow-x: auto;">
+        <table class="sgtm-table">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-person-badge"></i> Médico</th>
+                    <th><i class="bi bi-clipboard2-pulse"></i> Especialidad</th>
+                    <th style="text-align: center;"><i class="bi bi-calendar2-check"></i> Turnos</th>
+                    <th style="text-align: center;"><i class="bi bi-check2-circle"></i> Ejecutados</th>
+                    <th style="text-align: center;"><i class="bi bi-x-circle"></i> No-shows</th>
+                    <th style="text-align: center;"><i class="bi bi-percent"></i> Ocupación</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fila in detalle_profesionales %}
+                <tr data-testid="fila-profesional-{{ fila.medico_id }}">
+                    <td style="font-weight: 600;">Dr/a. {{ fila.medico_nombre }}</td>
+                    <td>
+                        <span style="background: var(--primary-subtle); color: var(--primary-dark); font-size: 0.78rem; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 20px;">
+                            {{ fila.especialidad }}
+                        </span>
+                    </td>
+                    <td style="text-align: center;">{{ fila.total_turnos }}</td>
+                    <td style="text-align: center;">{{ fila.ejecutados }}</td>
+                    <td style="text-align: center;">{{ fila.no_shows }}</td>
+                    <td style="text-align: center; font-weight: 700;">{{ fila.tasa_ocupacion }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state" data-testid="detalle-profesional-vacio">
+        <i class="bi bi-table d-block"></i>
+        <p>No hay datos de profesionales para el periodo seleccionado.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- EXPORT -->
+<div class="mt-3 animate-in animate-in-delay-2" style="display: flex; justify-content: space-between; align-items: center;">
+    <a href="/" class="btn-sgtm-outline">
+        <i class="bi bi-arrow-left"></i> Volver al inicio
+    </a>
+    <a href="{% url 'exportar_reporte' %}?mes={{ mes_seleccionado }}&especialidad={{ especialidad_seleccionada }}" class="btn-sgtm-outline" data-testid="btn-exportar-reporte">
+        <i class="bi bi-download"></i> Exportar CSV
+    </a>
+</div>
+
+{% if datos_ocupacion %}
+{{ datos_ocupacion.labels|json_script:"datos-ocupacion-labels" }}
+{{ datos_ocupacion.valores|json_script:"datos-ocupacion-valores" }}
+{% endif %}
+{% if datos_ausentismo %}
+{{ datos_ausentismo.labels|json_script:"datos-ausentismo-labels" }}
+{{ datos_ausentismo.valores|json_script:"datos-ausentismo-valores" }}
+{% endif %}
+
+{% if datos_ocupacion or datos_ausentismo %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" integrity="sha384-N0/cnAvr9PfHnRDeRDFD9KOLttE0AwlxBcyvDOWf8s2zVmlNRYWvSrYImaSrjcvi" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    {% if datos_ocupacion %}
+    const labelsOcupacion = JSON.parse(document.getElementById('datos-ocupacion-labels').textContent);
+    const valoresOcupacion = JSON.parse(document.getElementById('datos-ocupacion-valores').textContent);
+
+    new Chart(document.getElementById('chartOcupacion'), {
+        type: 'doughnut',
+        data: {
+            labels: labelsOcupacion,
+            datasets: [{
+                data: valoresOcupacion,
+                backgroundColor: ['#4F46E5', '#0EA5E9', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } }
+        }
+    });
+    {% endif %}
+
+    {% if datos_ausentismo %}
+    const labelsAusentismo = JSON.parse(document.getElementById('datos-ausentismo-labels').textContent);
+    const valoresAusentismo = JSON.parse(document.getElementById('datos-ausentismo-valores').textContent);
+
+    new Chart(document.getElementById('chartAusentismo'), {
+        type: 'bar',
+        data: {
+            labels: labelsAusentismo,
+            datasets: [{
+                label: 'No-shows',
+                data: valoresAusentismo,
+                backgroundColor: '#EF4444'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+            plugins: { legend: { display: false } }
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endif %}
+
+{% endblock %}
