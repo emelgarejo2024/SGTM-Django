@@ -3,7 +3,7 @@ from datetime import date, time, timedelta
 from django.core.exceptions import ValidationError
 from turnos.models import Especialidad, BloqueDisponibilidad, Reserva
 from turnos.factories import UsuarioFactory
-
+from django.urls import reverse
 
 @pytest.mark.django_db
 class TestModelos:
