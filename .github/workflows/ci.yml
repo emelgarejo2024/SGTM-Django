@@ -49,3 +49,6 @@ jobs:
           args: >
             -Dsonar.projectKey=sgtm_project
             -Dsonar.python.coverage.reportPaths=coverage.xml
+            -Dsonar.python.version=3.12
+            -Dsonar.tests=.
+            -Dsonar.test.inclusions="**/tests/**,**/test_*.py"
