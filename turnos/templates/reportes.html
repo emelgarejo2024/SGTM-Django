@@ -33,11 +33,12 @@
         <form method="GET" action="{% url 'reportes' %}" id="form-filtro-reportes" data-testid="form-filtro-reportes">
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label-sgtm">
+                    <label class="form-label-sgtm" for="input-mes-reporte">
                         <i class="bi bi-calendar3"></i> Mes
                     </label>
                     <input
                         type="month"
+                        id="input-mes-reporte"
                         name="mes"
                         class="form-control form-control-sgtm"
                         value="{{ mes_seleccionado|default:'' }}"
@@ -45,10 +46,10 @@
                     >
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label-sgtm">
+                    <label class="form-label-sgtm" for="select-especialidad-reporte">
                         <i class="bi bi-clipboard2-pulse"></i> Especialidad
                     </label>
-                    <select name="especialidad" class="form-control form-control-sgtm" data-testid="select-especialidad-reporte">
+                    <select name="especialidad" id="select-especialidad-reporte" class="form-control form-control-sgtm" data-testid="select-especialidad-reporte">
                         <option value="">Todas las especialidades</option>
                         {% for esp in especialidades %}
                         <option value="{{ esp.id }}" {% if esp.id|stringformat:"s" == especialidad_seleccionada %}selected{% endif %}>

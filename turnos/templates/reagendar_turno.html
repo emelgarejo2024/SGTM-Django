@@ -78,11 +78,12 @@
         <form method="GET" action="{% url 'reagendar_turno' turno_original.id %}" id="form-buscar-nuevo-horario" data-testid="form-buscar-nuevo-horario">
             <div class="row g-3">
                 <div class="col-md-8">
-                    <label class="form-label-sgtm">
+                    <label class="form-label-sgtm" for="input-fecha-nuevo-horario">
                         <i class="bi bi-calendar3"></i> Buscar otra fecha
                     </label>
                     <input
                         type="date"
+                        id="input-fecha-nuevo-horario"
                         name="fecha"
                         class="form-control form-control-sgtm"
                         value="{{ fecha_buscada|default:'' }}"

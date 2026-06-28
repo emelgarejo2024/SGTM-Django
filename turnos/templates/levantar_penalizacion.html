@@ -33,9 +33,10 @@
         <form method="GET" action="{% url 'levantar_penalizacion' %}" id="form-buscar-bloqueado" data-testid="form-buscar-bloqueado">
             <div class="row g-3">
                 <div class="col-md-8">
-                    <label class="form-label-sgtm"><i class="bi bi-person-badge"></i> RUT del paciente</label>
+                    <label class="form-label-sgtm" for="input-rut-buscar-bloqueado"><i class="bi bi-person-badge"></i> RUT del paciente</label>
                     <input
                         type="text"
+                        id="input-rut-buscar-bloqueado"
                         name="rut"
                         class="form-control form-control-sgtm"
                         placeholder="12345678-9"
@@ -74,8 +75,9 @@
                 <input type="hidden" name="paciente_id" value="{{ paciente_bloqueado.id }}">
 
                 <div class="mb-3">
-                    <label class="form-label-sgtm"><i class="bi bi-card-text"></i> Justificación técnica o médica</label>
+                    <label class="form-label-sgtm" for="textarea-justificacion-levantamiento"><i class="bi bi-card-text"></i> Justificación técnica o médica</label>
                     <textarea
+                        id="textarea-justificacion-levantamiento"
                         name="justificacion"
                         class="form-control form-control-sgtm"
                         rows="3"

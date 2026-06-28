@@ -47,9 +47,10 @@
                     {% csrf_token %}
 
                     <div class="mb-3">
-                        <label class="form-label-sgtm"><i class="bi bi-calendar3"></i> Fecha</label>
+                        <label class="form-label-sgtm" for="input-fecha-disponibilidad"><i class="bi bi-calendar3"></i> Fecha</label>
                         <input
                             type="date"
+                            id="input-fecha-disponibilidad"
                             name="fecha"
                             class="form-control form-control-sgtm"
                             min="{{ fecha_minima }}"
@@ -60,18 +61,18 @@
 
                     <div class="row g-2 mb-3">
                         <div class="col-6">
-                            <label class="form-label-sgtm"><i class="bi bi-clock"></i> Desde</label>
-                            <input type="time" name="hora_inicio" class="form-control form-control-sgtm" min="08:00" max="20:00" value="08:00" data-testid="input-hora-inicio-disponibilidad" required>
+                            <label class="form-label-sgtm" for="input-hora-inicio-disponibilidad"><i class="bi bi-clock"></i> Desde</label>
+                            <input type="time" id="input-hora-inicio-disponibilidad" name="hora_inicio" class="form-control form-control-sgtm" min="08:00" max="20:00" value="08:00" data-testid="input-hora-inicio-disponibilidad" required>
                         </div>
                         <div class="col-6">
-                            <label class="form-label-sgtm"><i class="bi bi-clock-fill"></i> Hasta</label>
-                            <input type="time" name="hora_fin" class="form-control form-control-sgtm" min="08:00" max="20:00" value="12:00" data-testid="input-hora-fin-disponibilidad" required>
+                            <label class="form-label-sgtm" for="input-hora-fin-disponibilidad"><i class="bi bi-clock-fill"></i> Hasta</label>
+                            <input type="time" id="input-hora-fin-disponibilidad" name="hora_fin" class="form-control form-control-sgtm" min="08:00" max="20:00" value="12:00" data-testid="input-hora-fin-disponibilidad" required>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label-sgtm"><i class="bi bi-hourglass-split"></i> Duración por consulta</label>
-                        <select name="duracion_minutos" class="form-control form-control-sgtm" data-testid="select-duracion-disponibilidad">
+                        <label class="form-label-sgtm" for="select-duracion-disponibilidad"><i class="bi bi-hourglass-split"></i> Duración por consulta</label>
+                        <select id="select-duracion-disponibilidad" name="duracion_minutos" class="form-control form-control-sgtm" data-testid="select-duracion-disponibilidad">
                             <option value="15">15 minutos</option>
                             <option value="20" selected>20 minutos</option>
                             <option value="30">30 minutos</option>
@@ -81,8 +82,8 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label-sgtm"><i class="bi bi-clipboard2-pulse"></i> Especialidad</label>
-                        <select name="especialidad" class="form-control form-control-sgtm" data-testid="select-especialidad-disponibilidad" required>
+                        <label class="form-label-sgtm" for="select-especialidad-disponibilidad"><i class="bi bi-clipboard2-pulse"></i> Especialidad</label>
+                        <select id="select-especialidad-disponibilidad" name="especialidad" class="form-control form-control-sgtm" data-testid="select-especialidad-disponibilidad" required>
                             {% for esp in especialidades_medico %}
                             <option value="{{ esp.id }}">{{ esp.nombre }}</option>
                             {% endfor %}

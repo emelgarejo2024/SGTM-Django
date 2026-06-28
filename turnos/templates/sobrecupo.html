@@ -67,9 +67,10 @@
             <input type="hidden" name="bloque_id" value="{{ bloque.id }}">
 
             <div class="mb-3">
-                <label class="form-label-sgtm"><i class="bi bi-person-badge"></i> RUT del paciente</label>
+                <label class="form-label-sgtm" for="input-rut-sobrecupo"><i class="bi bi-person-badge"></i> RUT del paciente</label>
                 <input
                     type="text"
+                    id="input-rut-sobrecupo"
                     name="rut_paciente"
                     class="form-control form-control-sgtm"
                     placeholder="12345678-9"
@@ -79,8 +80,8 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label-sgtm"><i class="bi bi-tag"></i> Tipo de motivo</label>
-                <select name="tipo_motivo" class="form-control form-control-sgtm" data-testid="select-tipo-motivo-sobrecupo" required>
+                <label class="form-label-sgtm" for="select-tipo-motivo-sobrecupo"><i class="bi bi-tag"></i> Tipo de motivo</label>
+                <select id="select-tipo-motivo-sobrecupo" name="tipo_motivo" class="form-control form-control-sgtm" data-testid="select-tipo-motivo-sobrecupo" required>
                     <option value="">Seleccione un tipo</option>
                     <option value="CLINICO">Clínico</option>
                     <option value="ADMINISTRATIVO">Administrativo</option>
@@ -88,8 +89,9 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label-sgtm"><i class="bi bi-card-text"></i> Justificación</label>
+                <label class="form-label-sgtm" for="textarea-motivo-sobrecupo"><i class="bi bi-card-text"></i> Justificación</label>
                 <textarea
+                    id="textarea-motivo-sobrecupo"
                     name="motivo"
                     class="form-control form-control-sgtm"
                     rows="3"

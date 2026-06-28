@@ -33,12 +33,12 @@
         <form method="GET" action="{% url 'calendario_global' %}" id="form-filtro-calendario" data-testid="form-filtro-calendario">
             <div class="row g-3">
                 <div class="col-md-3">
-                    <label class="form-label-sgtm"><i class="bi bi-calendar3"></i> Fecha</label>
-                    <input type="date" name="fecha" class="form-control form-control-sgtm" value="{{ fecha_seleccionada|default:'' }}" data-testid="input-fecha-calendario">
+                    <label class="form-label-sgtm" for="input-fecha-calendario"><i class="bi bi-calendar3"></i> Fecha</label>
+                    <input type="date" id="input-fecha-calendario" name="fecha" class="form-control form-control-sgtm" value="{{ fecha_seleccionada|default:'' }}" data-testid="input-fecha-calendario">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label-sgtm"><i class="bi bi-person-badge"></i> Médico</label>
-                    <select name="medico" class="form-control form-control-sgtm" data-testid="select-medico-calendario">
+                    <label class="form-label-sgtm" for="select-medico-calendario"><i class="bi bi-person-badge"></i> Médico</label>
+                    <select id="select-medico-calendario" name="medico" class="form-control form-control-sgtm" data-testid="select-medico-calendario">
                         <option value="">Todos los médicos</option>
                         {% for medico in medicos %}
                         <option value="{{ medico.id }}" {% if medico.id|stringformat:"s" == medico_seleccionado %}selected{% endif %}>
@@ -48,8 +48,8 @@
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label-sgtm"><i class="bi bi-info-circle"></i> Estado</label>
-                    <select name="estado" class="form-control form-control-sgtm" data-testid="select-estado-calendario">
+                    <label class="form-label-sgtm" for="select-estado-calendario"><i class="bi bi-info-circle"></i> Estado</label>
+                    <select id="select-estado-calendario" name="estado" class="form-control form-control-sgtm" data-testid="select-estado-calendario">
                         <option value="">Todos los estados</option>
                         <option value="DISPONIBLE">Disponible</option>
                         <option value="RESERVADO">Reservado</option>

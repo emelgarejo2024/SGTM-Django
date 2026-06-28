@@ -39,11 +39,12 @@
         <form method="GET" action="{% url 'checkin' %}" id="form-buscar-paciente" data-testid="form-buscar-paciente">
             <div class="row g-3">
                 <div class="col-md-8">
-                    <label class="form-label-sgtm">
+                    <label class="form-label-sgtm" for="input-buscar-paciente">
                         <i class="bi bi-person-badge"></i> RUT o Nombre del paciente
                     </label>
                     <input
                         type="text"
+                        id="input-buscar-paciente"
                         name="q"
                         class="form-control form-control-sgtm"
                         placeholder="Ej: 12345678-9 o Juan Pérez"
@@ -124,7 +125,6 @@
                         <form method="POST" action="{% url 'registrar_checkin' %}" style="display: inline;">
                             {% csrf_token %}
                             <input type="hidden" name="turno_id" value="{{ turno.id }}">
-                            <input type="hidden" name="q" value="{{ query }}">
                             <button type="submit" class="btn-reservar" data-testid="btn-checkin-{{ turno.id }}">
                                 <i class="bi bi-check-lg"></i> Marcar llegada
                             </button>
