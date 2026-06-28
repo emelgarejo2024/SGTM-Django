@@ -54,3 +54,4 @@ jobs:
             -Dsonar.exclusions=**/tests/**,**/test_*.py
             -Dsonar.tests=.
             -Dsonar.test.inclusions=**/tests/**,**/test_*.py
+            -Dsonar.coverage.exclusions=**/migrations/**,manage.py,**/asgi.py,**/wsgi.py,**/static/**
