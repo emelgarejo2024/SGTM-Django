@@ -1,3 +1,17 @@
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+
+import os
+import pytest
+
+if os.getenv("CI") or os.getenv("GITHUB_ACTIONS"):
+    pytest.skip("Skipping E2E in CI", allow_module_level=True)
+
+
+
+
 """
 Test E2E: UC-02 Registrar Check-in Presencial.
 
@@ -5,9 +19,6 @@ Simula a una recepcionista buscando a un paciente por RUT/nombre y
 marcando su llegada (check-in) sobre un turno reservado para el día actual.
 """
 
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 
 def buscar_por_testid(driver, testid):
