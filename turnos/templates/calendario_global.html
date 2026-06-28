@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Calendario Global{% endblock %}
+
+{% block content %}
+
+<!-- BREADCRUMB -->
+<nav aria-label="breadcrumb" class="animate-in" style="margin-bottom: 1.25rem;">
+    <ol style="display: flex; align-items: center; gap: 0.5rem; list-style: none; padding: 0; margin: 0; font-size: 0.85rem;">
+        <li>
+            <a href="/" style="color: var(--primary); text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.3rem;">
+                <i class="bi bi-house-door"></i> Inicio
+            </a>
+        </li>
+        <li style="color: var(--text-muted);"><i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i></li>
+        <li style="color: var(--text-secondary); font-weight: 500;">Calendario Global</li>
+    </ol>
+</nav>
+
+<!-- HEADER -->
+<div class="animate-in" style="margin-bottom: 1.5rem;">
+    <h1 style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text-primary); margin-bottom: 0.35rem;">
+        <i class="bi bi-calendar3-week" style="color: var(--primary);"></i> Calendario Global
+    </h1>
+    <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0;">
+        Vista consolidada de la agenda de todos los profesionales, sincronizada en tiempo real.
+    </p>
+</div>
+
+<!-- FILTER CARD -->
+<div class="sgtm-card animate-in animate-in-delay-1" style="margin-bottom: 1.25rem;">
+    <div class="sgtm-card-body">
+        <form method="GET" action="{% url 'calendario_global' %}" id="form-filtro-calendario" data-testid="form-filtro-calendario">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label-sgtm"><i class="bi bi-calendar3"></i> Fecha</label>
+                    <input type="date" name="fecha" class="form-control form-control-sgtm" value="{{ fecha_seleccionada|default:'' }}" data-testid="input-fecha-calendario">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-sgtm"><i class="bi bi-person-badge"></i> Médico</label>
+                    <select name="medico" class="form-control form-control-sgtm" data-testid="select-medico-calendario">
+                        <option value="">Todos los médicos</option>
+                        {% for medico in medicos %}
+                        <option value="{{ medico.id }}" {% if medico.id|stringformat:"s" == medico_seleccionado %}selected{% endif %}>
+                            Dr/a. {{ medico.first_name }} {{ medico.last_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-sgtm"><i class="bi bi-info-circle"></i> Estado</label>
+                    <select name="estado" class="form-control form-control-sgtm" data-testid="select-estado-calendario">
+                        <option value="">Todos los estados</option>
+                        <option value="DISPONIBLE">Disponible</option>
+                        <option value="RESERVADO">Reservado</option>
+                        <option value="CONFIRMADO">Confirmado</option>
+                        <option value="EN_SALA_ESPERA">En sala de espera</option>
+                        <option value="EJECUTADO">Ejecutado</option>
+                        <option value="CANCELADO">Cancelado</option>
+                        <option value="NO_SHOW">No-show</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn-sgtm w-100" data-testid="btn-aplicar-filtro-calendario">
+                        <i class="bi bi-filter"></i> Aplicar filtro
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- RESULTS TABLE -->
+<div class="sgtm-card animate-in animate-in-delay-2" data-testid="card-calendario-global">
+    <div class="sgtm-card-header" style="display: flex; align-items: center; justify-content: space-between;">
+        <h2 style="font-size: 1rem; font-weight: 700; color: var(--primary-dark); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="bi bi-list-check"></i> Turnos del día
+        </h2>
+        {% if turnos %}
+        <span class="badge-disponible">
+            {{ turnos|length }} turno{{ turnos|length|pluralize:"s" }}
+        </span>
+        {% endif %}
+    </div>
+
+    {% if turnos %}
+    <div style="overflow-x: auto;">
+        <table class="sgtm-table" data-testid="tabla-calendario-global">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-clock"></i> Horario</th>
+                    <th><i class="bi bi-person-badge"></i> Médico</th>
+                    <th><i class="bi bi-clipboard2-pulse"></i> Especialidad</th>
+                    <th><i class="bi bi-person"></i> Paciente</th>
+                    <th><i class="bi bi-info-circle"></i> Estado</th>
+                    <th style="text-align: center;"><i class="bi bi-gear"></i> Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for turno in turnos %}
+                <tr class="animate-in" style="animation-delay: {{ forloop.counter0 }}00ms;" data-testid="fila-calendario-{{ turno.id }}">
+                    <td>
+                        <span style="font-weight: 700; font-size: 0.95rem;">{{ turno.bloque.hora_inicio|time:"H:i" }}</span>
+                        <span style="color: var(--text-muted); margin: 0 0.25rem;">—</span>
+                        <span style="color: var(--text-secondary);">{{ turno.bloque.hora_fin|time:"H:i" }}</span>
+                    </td>
+                    <td>Dr/a. {{ turno.bloque.medico.first_name }} {{ turno.bloque.medico.last_name }}</td>
+                    <td>
+                        <span style="background: var(--primary-subtle); color: var(--primary-dark); font-size: 0.78rem; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 20px;">
+                            {{ turno.bloque.especialidad.nombre }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if turno.paciente %}
+                            {{ turno.paciente.get_full_name }}
+                        {% else %}
+                            <span style="color: var(--text-muted);">— Bloque libre —</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge-estado badge-estado-{{ turno.estado|lower }}" data-testid="estado-calendario-{{ turno.id }}">
+                            {{ turno.get_estado_display }}
+                        </span>
+                    </td>
+                    <td style="text-align: center;">
+                        <div style="display: flex; gap: 0.4rem; justify-content: center; flex-wrap: wrap;">
+                            {% if turno.paciente %}
+                            <a href="{% url 'editar_turno_recepcion' turno.id %}" class="btn-sgtm-outline" data-testid="btn-editar-turno-{{ turno.id }}" title="Agendar/modificar en representación del paciente">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% else %}
+                            <a href="{% url 'sobrecupo' %}?bloque_id={{ turno.bloque.id }}" class="btn-sgtm-outline" data-testid="btn-sobrecupo-rapido-{{ turno.id }}" title="Forzar sobrecupo">
+                                <i class="bi bi-plus-circle"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state" data-testid="calendario-sin-resultados">
+        <i class="bi bi-calendar-x d-block"></i>
+        <p>No hay turnos para los filtros seleccionados.</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

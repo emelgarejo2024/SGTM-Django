@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Crear Cuenta{% endblock %}
+
+{% block content %}
+
+<div class="animate-in" style="max-width: 460px; margin: 2rem auto;">
+
+    <div style="text-align: center; margin-bottom: 1.5rem;">
+        <h1 style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text-primary); margin-bottom: 0.35rem;">
+            <i class="bi bi-person-plus" style="color: var(--primary);"></i> Crear Cuenta
+        </h1>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0;">
+            Regístrese para agendar sus turnos médicos de forma autónoma.
+        </p>
+    </div>
+
+    <div class="sgtm-card animate-in animate-in-delay-1">
+        <div class="sgtm-card-body">
+
+            <!-- ALERTA DE ERROR -->
+            <div id="alerta-registro" data-testid="alerta-registro" style="display: none; background: #FEF2F2; border: 1px solid #FCA5A5; color: #991B1B; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1rem;">
+                <i class="bi bi-exclamation-circle-fill"></i>
+                <span id="texto-alerta-registro" data-testid="texto-alerta-registro"></span>
+                <span id="link-recuperar-wrapper" style="display: none;">
+                    — <a href="{% url 'recuperar_password' %}" style="color: #991B1B; text-decoration: underline;" data-testid="link-recuperar-password">¿Olvidó su contraseña?</a>
+                </span>
+            </div>
+
+            <form id="form-registro" data-testid="form-registro">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label-sgtm"><i class="bi bi-person"></i> Nombre</label>
+                        <input type="text" id="input-nombre" name="nombre" class="form-control form-control-sgtm" data-testid="input-nombre-registro" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-sgtm"><i class="bi bi-person"></i> Apellido</label>
+                        <input type="text" id="input-apellido" name="apellido" class="form-control form-control-sgtm" data-testid="input-apellido-registro" required>
+                    </div>
+                </div>
+
+                <div class="mb-3 mt-3">
+                    <label class="form-label-sgtm"><i class="bi bi-person-badge"></i> RUT</label>
+                    <input
+                        type="text"
+                        id="input-rut-registro"
+                        name="rut"
+                        class="form-control form-control-sgtm"
+                        placeholder="12345678-9"
+                        data-testid="input-rut-registro"
+                        required
+                    >
+                    <span id="error-rut" data-testid="error-rut-registro" style="display: none; font-size: 0.78rem; color: #991B1B;">
+                        RUT inválido. Verifique el dígito verificador.
+                    </span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label-sgtm"><i class="bi bi-envelope"></i> Correo electrónico</label>
+                    <input type="email" id="input-email" name="email" class="form-control form-control-sgtm" data-testid="input-email-registro" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label-sgtm"><i class="bi bi-telephone"></i> Teléfono</label>
+                    <input type="tel" id="input-telefono" name="telefono" class="form-control form-control-sgtm" placeholder="+56 9 1234 5678" data-testid="input-telefono-registro" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label-sgtm"><i class="bi bi-lock"></i> Contraseña</label>
+                    <input
+                        type="password"
+                        id="input-password-registro"
+                        name="password"
+                        class="form-control form-control-sgtm"
+                        data-testid="input-password-registro"
+                        minlength="8"
+                        required
+                        autocomplete="new-password"
+                    >
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label-sgtm"><i class="bi bi-lock-fill"></i> Confirmar contraseña</label>
+                    <input
+                        type="password"
+                        id="input-password-confirmar"
+                        name="password_confirmar"
+                        class="form-control form-control-sgtm"
+                        data-testid="input-password-confirmar-registro"
+                        required
+                        autocomplete="new-password"
+                    >
+                    <span id="error-password-match" data-testid="error-password-match" style="display: none; font-size: 0.78rem; color: #991B1B;">
+                        Las contraseñas no coinciden.
+                    </span>
+                </div>
+
+                <button type="submit" class="btn-sgtm w-100" id="btn-submit-registro" data-testid="btn-submit-registro">
+                    <span id="texto-btn-registro">
+                        <i class="bi bi-person-check"></i> Crear cuenta
+                    </span>
+                    <span id="spinner-btn-registro" style="display: none;">
+                        <i class="bi bi-arrow-repeat" style="animation: spin 1s linear infinite;"></i> Creando cuenta...
+                    </span>
+                </button>
+            </form>
+
+            <div style="text-align: center; margin-top: 1.25rem; font-size: 0.85rem; color: var(--text-secondary);">
+                ¿Ya tiene cuenta?
+                <a href="{% url 'login' %}" style="color: var(--primary); font-weight: 600; text-decoration: none;" data-testid="link-ir-login">
+                    Inicie sesión
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+</style>
+
+<script>
+const API_REGISTRO_URL = "/api/auth/registro/";
+const URL_DESPUES_REGISTRO = "/";
+
+function obtenerCookie(nombre) {
+    const valor = `; ${document.cookie}`;
+    const partes = valor.split(`; ${nombre}=`);
+    if (partes.length === 2) return partes.pop().split(";").shift();
+    return null;
+}
+
+function validarRut(rutCompleto) {
+    const rutLimpio = rutCompleto.replace(/[.\-]/g, "").trim();
+    if (rutLimpio.length < 2) return false;
+
+    const cuerpo = rutLimpio.slice(0, -1);
+    const dv = rutLimpio.slice(-1).toUpperCase();
+
+    if (!/^\d+$/.test(cuerpo)) return false;
+
+    let suma = 0;
+    let multiplo = 2;
+    for (let i = cuerpo.length - 1; i >= 0; i--) {
+        suma += parseInt(cuerpo[i], 10) * multiplo;
+        multiplo = multiplo === 7 ? 2 : multiplo + 1;
+    }
+    const resto = 11 - (suma % 11);
+    const dvEsperado = resto === 11 ? "0" : resto === 10 ? "K" : String(resto);
+
+    return dv === dvEsperado;
+}
+
+function mostrarError(mensaje, conLinkRecuperar) {
+    document.getElementById("texto-alerta-registro").textContent = mensaje;
+    document.getElementById("link-recuperar-wrapper").style.display = conLinkRecuperar ? "inline" : "none";
+    document.getElementById("alerta-registro").style.display = "block";
+}
+
+function ocultarError() {
+    document.getElementById("alerta-registro").style.display = "none";
+}
+
+function ponerCargando(cargando) {
+    const boton = document.getElementById("btn-submit-registro");
+    document.getElementById("texto-btn-registro").style.display = cargando ? "none" : "inline";
+    document.getElementById("spinner-btn-registro").style.display = cargando ? "inline" : "none";
+    boton.disabled = cargando;
+}
+
+document.getElementById("form-registro").addEventListener("submit", async function (evento) {
+    evento.preventDefault();
+    ocultarError();
+    document.getElementById("error-rut").style.display = "none";
+    document.getElementById("error-password-match").style.display = "none";
+
+    const rut = document.getElementById("input-rut-registro").value.trim();
+    const password = document.getElementById("input-password-registro").value;
+    const passwordConfirmar = document.getElementById("input-password-confirmar").value;
+
+    if (!validarRut(rut)) {
+        document.getElementById("error-rut").style.display = "inline";
+        return;
+    }
+
+    if (password !== passwordConfirmar) {
+        document.getElementById("error-password-match").style.display = "inline";
+        return;
+    }
+
+    ponerCargando(true);
+
+    const cuerpoSolicitud = {
+        nombre: document.getElementById("input-nombre").value.trim(),
+        apellido: document.getElementById("input-apellido").value.trim(),
+        rut: rut,
+        email: document.getElementById("input-email").value.trim(),
+        telefono: document.getElementById("input-telefono").value.trim(),
+        password: password,
+    };
+
+    try {
+        const respuesta = await fetch(API_REGISTRO_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": obtenerCookie("csrftoken"),
+            },
+            body: JSON.stringify(cuerpoSolicitud),
+        });
+
+        const datos = await respuesta.json();
+
+        if (respuesta.status === 409 || (datos.errores && (datos.errores.rut || datos.errores.email))) {
+            mostrarError("El RUT o correo ingresado ya está registrado.", true);
+            return;
+        }
+
+        if (!respuesta.ok) {
+            mostrarError("No fue posible crear la cuenta. Verifique los datos ingresados.", false);
+            return;
+        }
+
+        if (datos.access) {
+            localStorage.setItem("sgtm_access_token", datos.access);
+            localStorage.setItem("sgtm_refresh_token", datos.refresh);
+        }
+
+        window.location.href = URL_DESPUES_REGISTRO;
+
+    } catch (error) {
+        mostrarError("Error de conexión con el servidor. Intente nuevamente.", false);
+    } finally {
+        ponerCargando(false);
+    }
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Levantar Penalización{% endblock %}
+
+{% block content %}
+
+<!-- BREADCRUMB -->
+<nav aria-label="breadcrumb" class="animate-in" style="margin-bottom: 1.25rem;">
+    <ol style="display: flex; align-items: center; gap: 0.5rem; list-style: none; padding: 0; margin: 0; font-size: 0.85rem;">
+        <li>
+            <a href="/" style="color: var(--primary); text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.3rem;">
+                <i class="bi bi-house-door"></i> Inicio
+            </a>
+        </li>
+        <li style="color: var(--text-muted);"><i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i></li>
+        <li style="color: var(--text-secondary); font-weight: 500;">Levantar Penalización</li>
+    </ol>
+</nav>
+
+<!-- HEADER -->
+<div class="animate-in" style="margin-bottom: 1.5rem;">
+    <h1 style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text-primary); margin-bottom: 0.35rem;">
+        <i class="bi bi-unlock" style="color: var(--primary);"></i> Levantar Penalización
+    </h1>
+    <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0;">
+        Restaure el agendamiento autónomo de un paciente bloqueado por inasistencias reiteradas.
+    </p>
+</div>
+
+<!-- SEARCH CARD -->
+<div class="sgtm-card animate-in animate-in-delay-1" style="margin-bottom: 1.25rem;">
+    <div class="sgtm-card-body">
+        <form method="GET" action="{% url 'levantar_penalizacion' %}" id="form-buscar-bloqueado" data-testid="form-buscar-bloqueado">
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label-sgtm"><i class="bi bi-person-badge"></i> RUT del paciente</label>
+                    <input
+                        type="text"
+                        name="rut"
+                        class="form-control form-control-sgtm"
+                        placeholder="12345678-9"
+                        value="{{ rut_buscado|default:'' }}"
+                        data-testid="input-rut-buscar-bloqueado"
+                        required
+                    >
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn-sgtm w-100" data-testid="btn-buscar-bloqueado">
+                        <i class="bi bi-search"></i> Buscar
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if rut_buscado %}
+    {% if paciente_bloqueado %}
+    <div class="sgtm-card animate-in animate-in-delay-2" data-testid="card-paciente-bloqueado" style="border-left: 3px solid #D85A30;">
+        <div class="sgtm-card-header">
+            <h2 style="font-size: 1rem; font-weight: 700; color: var(--primary-dark); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="bi bi-exclamation-triangle"></i> Cuenta bloqueada
+            </h2>
+        </div>
+        <div class="sgtm-card-body">
+            <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.9rem; margin-bottom: 1.25rem;">
+                <span data-testid="bloqueado-nombre"><i class="bi bi-person"></i> <strong>{{ paciente_bloqueado.get_full_name }}</strong></span>
+                <span data-testid="bloqueado-rut"><i class="bi bi-person-badge"></i> {{ paciente_bloqueado.rut }}</span>
+                <span data-testid="bloqueado-no-shows"><i class="bi bi-x-circle"></i> {{ paciente_bloqueado.cantidad_no_shows }} no-shows registrados</span>
+            </div>
+
+            <form method="POST" action="{% url 'confirmar_levantamiento' %}" id="form-levantar-penalizacion" data-testid="form-levantar-penalizacion">
+                {% csrf_token %}
+                <input type="hidden" name="paciente_id" value="{{ paciente_bloqueado.id }}">
+
+                <div class="mb-3">
+                    <label class="form-label-sgtm"><i class="bi bi-card-text"></i> Justificación técnica o médica</label>
+                    <textarea
+                        name="justificacion"
+                        class="form-control form-control-sgtm"
+                        rows="3"
+                        placeholder="Explique el motivo del levantamiento de la penalización..."
+                        data-testid="textarea-justificacion-levantamiento"
+                        required
+                    ></textarea>
+                    <span style="font-size: 0.78rem; color: var(--text-muted);">
+                        Esta justificación quedará registrada en el log de auditoría (BR-32).
+                    </span>
+                </div>
+
+                <button type="submit" class="btn-sgtm w-100" data-testid="btn-confirmar-levantamiento">
+                    <i class="bi bi-unlock-fill"></i> Levantar penalización
+                </button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <div class="sgtm-card animate-in animate-in-delay-2" data-testid="paciente-no-bloqueado">
+        <div class="empty-state">
+            <i class="bi bi-check-circle d-block" style="color: var(--success);"></i>
+            <p>Este paciente no tiene una penalización activa.</p>
+        </div>
+    </div>
+    {% endif %}
+{% endif %}
+
+{% endblock %}

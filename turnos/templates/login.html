@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Iniciar Sesión{% endblock %}
+
+{% block content %}
+
+<div class="animate-in" style="max-width: 420px; margin: 2rem auto;">
+
+    <div style="text-align: center; margin-bottom: 1.5rem;">
+        <h1 style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text-primary); margin-bottom: 0.35rem;">
+            <i class="bi bi-shield-lock" style="color: var(--primary);"></i> Iniciar Sesión
+        </h1>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0;">
+            Ingrese con su RUT y contraseña para continuar.
+        </p>
+    </div>
+
+    <div class="sgtm-card animate-in animate-in-delay-1">
+        <div class="sgtm-card-body">
+
+            <!-- ALERTA DE ERROR (oculta por defecto, JS la muestra) -->
+            <div id="alerta-login" data-testid="alerta-login" style="display: none; background: #FEF2F2; border: 1px solid #FCA5A5; color: #991B1B; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1rem;">
+                <i class="bi bi-exclamation-circle-fill"></i>
+                <span id="texto-alerta-login" data-testid="texto-alerta-login"></span>
+            </div>
+
+            <form id="form-login" data-testid="form-login">
+                <div class="mb-3">
+                    <label class="form-label-sgtm">
+                        <i class="bi bi-person-badge"></i> RUT
+                    </label>
+                    <input
+                        type="text"
+                        id="input-rut"
+                        name="rut"
+                        class="form-control form-control-sgtm"
+                        placeholder="12345678-9"
+                        data-testid="input-rut-login"
+                        required
+                        autocomplete="username"
+                    >
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label-sgtm">
+                        <i class="bi bi-lock"></i> Contraseña
+                    </label>
+                    <input
+                        type="password"
+                        id="input-password"
+                        name="password"
+                        class="form-control form-control-sgtm"
+                        placeholder="••••••••"
+                        data-testid="input-password-login"
+                        required
+                        autocomplete="current-password"
+                    >
+                </div>
+
+                <button type="submit" class="btn-sgtm w-100" id="btn-submit-login" data-testid="btn-submit-login">
+                    <span id="texto-btn-login">
+                        <i class="bi bi-box-arrow-in-right"></i> Ingresar
+                    </span>
+                    <span id="spinner-btn-login" style="display: none;">
+                        <i class="bi bi-arrow-repeat" style="animation: spin 1s linear infinite;"></i> Verificando...
+                    </span>
+                </button>
+            </form>
+
+            <div style="text-align: center; margin-top: 1.25rem; font-size: 0.85rem; color: var(--text-secondary);">
+                ¿No tiene cuenta?
+                <a href="{% url 'registro' %}" style="color: var(--primary); font-weight: 600; text-decoration: none;" data-testid="link-ir-registro">
+                    Regístrese aquí
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+</style>
+
+<script>
+const API_LOGIN_URL = "/api/auth/login/";
+const URL_DESPUES_LOGIN = "/";
+const URL_CUENTA_BLOQUEADA = "{% url 'cuenta_bloqueada' %}";
+
+function obtenerCookie(nombre) {
+    const valor = `; ${document.cookie}`;
+    const partes = valor.split(`; ${nombre}=`);
+    if (partes.length === 2) return partes.pop().split(";").shift();
+    return null;
+}
+
+function mostrarError(mensaje) {
+    const alerta = document.getElementById("alerta-login");
+    const texto = document.getElementById("texto-alerta-login");
+    texto.textContent = mensaje;
+    alerta.style.display = "block";
+}
+
+function ocultarError() {
+    document.getElementById("alerta-login").style.display = "none";
+}
+
+function ponerCargando(cargando) {
+    const boton = document.getElementById("btn-submit-login");
+    document.getElementById("texto-btn-login").style.display = cargando ? "none" : "inline";
+    document.getElementById("spinner-btn-login").style.display = cargando ? "inline" : "none";
+    boton.disabled = cargando;
+}
+
+document.getElementById("form-login").addEventListener("submit", async function (evento) {
+    evento.preventDefault();
+    ocultarError();
+    ponerCargando(true);
+
+    const rut = document.getElementById("input-rut").value.trim();
+    const password = document.getElementById("input-password").value;
+
+    try {
+        const respuesta = await fetch(API_LOGIN_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": obtenerCookie("csrftoken"),
+            },
+            body: JSON.stringify({ rut: rut, password: password }),
+        });
+
+        const datos = await respuesta.json();
+
+        if (respuesta.status === 401) {
+            mostrarError("Credenciales incorrectas. Verifique su RUT y contraseña.");
+            return;
+        }
+
+        if (respuesta.status === 403 && datos.bloqueado) {
+            window.location.href = URL_CUENTA_BLOQUEADA;
+            return;
+        }
+
+        if (!respuesta.ok) {
+            mostrarError("No fue posible iniciar sesión. Intente nuevamente.");
+            return;
+        }
+
+        localStorage.setItem("sgtm_access_token", datos.access);
+        localStorage.setItem("sgtm_refresh_token", datos.refresh);
+
+        window.location.href = URL_DESPUES_LOGIN;
+
+    } catch (error) {
+        mostrarError("Error de conexión con el servidor. Intente nuevamente.");
+    } finally {
+        ponerCargando(false);
+    }
+});
+</script>
+
+{% endblock %}

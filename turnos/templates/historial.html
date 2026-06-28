@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Mi Historial de Turnos{% endblock %}
+
+{% block content %}
+
+<!-- BREADCRUMB -->
+<nav aria-label="breadcrumb" class="animate-in" style="margin-bottom: 1.25rem;">
+    <ol style="display: flex; align-items: center; gap: 0.5rem; list-style: none; padding: 0; margin: 0; font-size: 0.85rem;">
+        <li>
+            <a href="/" style="color: var(--primary); text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.3rem;">
+                <i class="bi bi-house-door"></i> Inicio
+            </a>
+        </li>
+        <li style="color: var(--text-muted);"><i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i></li>
+        <li style="color: var(--text-secondary); font-weight: 500;">Mi Historial</li>
+    </ol>
+</nav>
+
+<!-- HEADER -->
+<div class="animate-in" style="margin-bottom: 1.5rem;">
+    <h1 style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text-primary); margin-bottom: 0.35rem;">
+        <i class="bi bi-clock-history" style="color: var(--primary);"></i> Mi Historial de Turnos
+    </h1>
+    <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0;">
+        Consulte, confirme, reagende o cancele sus citas médicas.
+    </p>
+</div>
+
+<!-- FILTER TABS -->
+<div class="animate-in animate-in-delay-1" style="margin-bottom: 1.25rem;">
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <a href="?filtro=futuros" class="btn-sgtm-outline {% if filtro_activo == 'futuros' or not filtro_activo %}active{% endif %}" data-testid="filtro-futuros">
+            <i class="bi bi-calendar-event"></i> Próximos
+        </a>
+        <a href="?filtro=pasados" class="btn-sgtm-outline {% if filtro_activo == 'pasados' %}active{% endif %}" data-testid="filtro-pasados">
+            <i class="bi bi-calendar-check"></i> Pasados
+        </a>
+        <a href="?filtro=todos" class="btn-sgtm-outline {% if filtro_activo == 'todos' %}active{% endif %}" data-testid="filtro-todos">
+            <i class="bi bi-list-ul"></i> Todos
+        </a>
+    </div>
+</div>
+
+<!-- RESULTS TABLE CARD -->
+<div class="sgtm-card animate-in animate-in-delay-2" data-testid="card-historial">
+    <div class="sgtm-card-header" style="display: flex; align-items: center; justify-content: space-between;">
+        <h2 style="font-size: 1rem; font-weight: 700; color: var(--primary-dark); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="bi bi-list-check"></i>
+            Mis Turnos
+        </h2>
+        {% if turnos %}
+        <span class="badge-disponible">
+            {{ turnos|length }} turno{{ turnos|length|pluralize:"s" }}
+        </span>
+        {% endif %}
+    </div>
+
+    {% if turnos %}
+    <div style="overflow-x: auto;">
+        <table class="sgtm-table" data-testid="tabla-historial">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-calendar3"></i> Fecha</th>
+                    <th><i class="bi bi-clock"></i> Horario</th>
+                    <th><i class="bi bi-person-badge"></i> Médico</th>
+                    <th><i class="bi bi-clipboard2-pulse"></i> Especialidad</th>
+                    <th><i class="bi bi-info-circle"></i> Estado</th>
+                    <th style="text-align: center;"><i class="bi bi-gear"></i> Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for turno in turnos %}
+                <tr class="animate-in" style="animation-delay: {{ forloop.counter0 }}00ms;" data-testid="fila-historial-{{ turno.id }}">
+                    <td>
+                        <span style="font-weight: 600; font-size: 0.9rem;">
+                            {{ turno.bloque.fecha|date:"d/m/Y" }}
+                        </span>
+                    </td>
+                    <td>
+                        <span style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">
+                            {{ turno.bloque.hora_inicio|time:"H:i" }}
+                        </span>
+                        <span style="color: var(--text-muted); margin: 0 0.25rem;">—</span>
+                        <span style="color: var(--text-secondary);">
+                            {{ turno.bloque.hora_fin|time:"H:i" }}
+                        </span>
+                    </td>
+                    <td>
+                        Dr/a. {{ turno.bloque.medico.first_name }} {{ turno.bloque.medico.last_name }}
+                    </td>
+                    <td>
+                        <span style="background: var(--primary-subtle); color: var(--primary-dark); font-size: 0.78rem; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 20px;">
+                            {{ turno.bloque.especialidad.nombre }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge-estado badge-estado-{{ turno.estado|lower }}" data-testid="estado-historial-{{ turno.id }}">
+                            {{ turno.get_estado_display }}
+                        </span>
+                    </td>
+                    <td style="text-align: center;">
+                        <div style="display: flex; gap: 0.4rem; justify-content: center; flex-wrap: wrap;">
+
+                            {% if turno.estado == "RESERVADO" %}
+                            <!-- CONFIRMAR (UC-08) -->
+                            <form method="POST" action="{% url 'confirmar_turno' %}" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="turno_id" value="{{ turno.id }}">
+                                <button type="submit" class="btn-reservar" data-testid="btn-confirmar-{{ turno.id }}" title="Confirmar asistencia">
+                                    <i class="bi bi-check-lg"></i> Confirmar
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            {% if turno.estado == "RESERVADO" or turno.estado == "CONFIRMADO" %}
+                            <!-- REAGENDAR (UC-03) -->
+                            <a href="{% url 'reagendar_turno' turno.id %}" class="btn-sgtm-outline" data-testid="btn-reagendar-{{ turno.id }}" title="Reagendar turno">
+                                <i class="bi bi-arrow-repeat"></i> Reagendar
+                            </a>
+
+                            <!-- CANCELAR (UC-06) -->
+                            <form method="POST" action="{% url 'cancelar_turno' %}" style="display: inline;" data-testid="form-cancelar-{{ turno.id }}" onsubmit="return confirm('¿Está seguro de que desea cancelar este turno?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="turno_id" value="{{ turno.id }}">
+                                {% if turno.puede_cancelar %}
+                                <button type="submit" class="btn-cancelar" data-testid="btn-cancelar-{{ turno.id }}" title="Cancelar turno">
+                                    <i class="bi bi-x-lg"></i> Cancelar
+                                </button>
+                                {% else %}
+                                <button type="button" class="btn-cancelar" disabled data-testid="btn-cancelar-{{ turno.id }}" title="Fuera de plazo: se requieren mínimo 12 horas de anticipación (BR-24)">
+                                    <i class="bi bi-x-lg"></i> Cancelar
+                                </button>
+                                {% endif %}
+                            </form>
+                            {% endif %}
+
+                            {% if turno.estado == "CANCELADO" or turno.estado == "EJECUTADO" or turno.estado == "NO_SHOW" %}
+                            <span style="font-size: 0.78rem; color: var(--text-muted);" data-testid="sin-acciones-{{ turno.id }}">
+                                Sin acciones disponibles
+                            </span>
+                            {% endif %}
+
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state" data-testid="historial-vacio">
+        <i class="bi bi-calendar-x d-block"></i>
+        <p>No tiene turnos {% if filtro_activo == 'pasados' %}pasados{% else %}agendados{% endif %} por el momento.</p>
+        <a href="/" class="btn-sgtm" style="margin-top: 0.75rem; display: inline-flex;">
+            <i class="bi bi-search"></i> Buscar turnos disponibles
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- BACK BUTTON -->
+<div class="mt-3 animate-in animate-in-delay-2">
+    <a href="/" class="btn-sgtm-outline">
+        <i class="bi bi-arrow-left"></i> Volver al inicio
+    </a>
+</div>
+
+{% endblock %}

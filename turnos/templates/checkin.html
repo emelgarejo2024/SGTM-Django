@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Check-in Presencial{% endblock %}
+
+{% block content %}
+
+<!-- BREADCRUMB -->
+<nav aria-label="breadcrumb" class="animate-in" style="margin-bottom: 1.25rem;">
+    <ol style="display: flex; align-items: center; gap: 0.5rem; list-style: none; padding: 0; margin: 0; font-size: 0.85rem;">
+        <li>
+            <a href="/" style="color: var(--primary); text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 0.3rem;">
+                <i class="bi bi-house-door"></i> Inicio
+            </a>
+        </li>
+        <li style="color: var(--text-muted);"><i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i></li>
+        <li style="color: var(--text-secondary); font-weight: 500;">Check-in Presencial</li>
+    </ol>
+</nav>
+
+<!-- HEADER -->
+<div class="animate-in" style="margin-bottom: 1.5rem;">
+    <h1 style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text-primary); margin-bottom: 0.35rem;">
+        <i class="bi bi-person-check" style="color: var(--primary);"></i> Check-in Presencial
+    </h1>
+    <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0;">
+        Busque al paciente por RUT o nombre para registrar su llegada al recinto.
+    </p>
+</div>
+
+<!-- SEARCH CARD -->
+<div class="sgtm-card animate-in animate-in-delay-1" id="search-card">
+    <div class="sgtm-card-header">
+        <h2 style="font-size: 1.1rem; font-weight: 700; color: var(--primary-dark); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="bi bi-search-heart"></i>
+            Buscar Paciente
+        </h2>
+    </div>
+    <div class="sgtm-card-body">
+        <form method="GET" action="{% url 'checkin' %}" id="form-buscar-paciente" data-testid="form-buscar-paciente">
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label-sgtm">
+                        <i class="bi bi-person-badge"></i> RUT o Nombre del paciente
+                    </label>
+                    <input
+                        type="text"
+                        name="q"
+                        class="form-control form-control-sgtm"
+                        placeholder="Ej: 12345678-9 o Juan Pérez"
+                        value="{{ query|default:'' }}"
+                        data-testid="input-buscar-paciente"
+                        required
+                    >
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn-sgtm w-100" data-testid="btn-buscar-paciente">
+                        <i class="bi bi-search"></i> Buscar
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- RESULTS: TURNOS DEL PACIENTE -->
+{% if query %}
+<div class="sgtm-card animate-in animate-in-delay-2" style="margin-top: 1.25rem;" data-testid="resultados-checkin">
+    <div class="sgtm-card-header" style="display: flex; align-items: center; justify-content: space-between;">
+        <h2 style="font-size: 1rem; font-weight: 700; color: var(--primary-dark); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="bi bi-calendar2-check"></i>
+            Turnos de hoy
+        </h2>
+        {% if turnos %}
+        <span class="badge-disponible">
+            {{ turnos|length }} turno{{ turnos|length|pluralize:"s" }} encontrado{{ turnos|length|pluralize:"s" }}
+        </span>
+        {% endif %}
+    </div>
+
+    {% if turnos %}
+    <div style="overflow-x: auto;">
+        <table class="sgtm-table" data-testid="tabla-turnos-checkin">
+            <thead>
+                <tr>
+                    <th><i class="bi bi-person"></i> Paciente</th>
+                    <th><i class="bi bi-clock"></i> Horario</th>
+                    <th><i class="bi bi-person-badge"></i> Médico</th>
+                    <th><i class="bi bi-clipboard2-pulse"></i> Especialidad</th>
+                    <th><i class="bi bi-info-circle"></i> Estado</th>
+                    <th style="text-align: center;"><i class="bi bi-check2-circle"></i> Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for turno in turnos %}
+                <tr class="animate-in" style="animation-delay: {{ forloop.counter0 }}00ms;" data-testid="fila-turno-{{ turno.id }}">
+                    <td>
+                        <div style="font-weight: 600; font-size: 0.9rem;">{{ turno.paciente.get_full_name }}</div>
+                        <div style="font-size: 0.78rem; color: var(--text-muted);">{{ turno.paciente.rut }}</div>
+                    </td>
+                    <td>
+                        <span style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">
+                            {{ turno.bloque.hora_inicio|time:"H:i" }}
+                        </span>
+                        <span style="color: var(--text-muted); margin: 0 0.25rem;">—</span>
+                        <span style="color: var(--text-secondary);">
+                            {{ turno.bloque.hora_fin|time:"H:i" }}
+                        </span>
+                    </td>
+                    <td>
+                        Dr/a. {{ turno.bloque.medico.first_name }} {{ turno.bloque.medico.last_name }}
+                    </td>
+                    <td>
+                        <span style="background: var(--primary-subtle); color: var(--primary-dark); font-size: 0.78rem; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 20px;">
+                            {{ turno.bloque.especialidad.nombre }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge-estado badge-estado-{{ turno.estado|lower }}" data-testid="estado-turno-{{ turno.id }}">
+                            {{ turno.get_estado_display }}
+                        </span>
+                    </td>
+                    <td style="text-align: center;">
+                        {% if turno.estado == "RESERVADO" or turno.estado == "CONFIRMADO" %}
+                        <form method="POST" action="{% url 'registrar_checkin' %}" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="turno_id" value="{{ turno.id }}">
+                            <input type="hidden" name="q" value="{{ query }}">
+                            <button type="submit" class="btn-reservar" data-testid="btn-checkin-{{ turno.id }}">
+                                <i class="bi bi-check-lg"></i> Marcar llegada
+                            </button>
+                        </form>
+                        {% elif turno.estado == "EN_SALA_ESPERA" %}
+                        <span style="font-size: 0.78rem; color: var(--success); font-weight: 600;" data-testid="checkin-ya-realizado-{{ turno.id }}">
+                            <i class="bi bi-check-circle-fill"></i> Ya en sala de espera
+                        </span>
+                        {% else %}
+                        <span style="font-size: 0.78rem; color: var(--text-muted);" data-testid="checkin-no-disponible-{{ turno.id }}">
+                            No disponible
+                        </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state" data-testid="checkin-sin-resultados">
+        <i class="bi bi-calendar-x d-block"></i>
+        <p>No se encontraron turnos para hoy con ese criterio de búsqueda.</p>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">Verifique el RUT o nombre ingresado.</span>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- BACK BUTTON -->
+<div class="mt-3 animate-in animate-in-delay-2">
+    <a href="/" class="btn-sgtm-outline">
+        <i class="bi bi-arrow-left"></i> Volver al inicio
+    </a>
+</div>
+
+{% endblock %}
