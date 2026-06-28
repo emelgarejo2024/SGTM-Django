@@ -140,7 +140,7 @@ class TestModelos:
         assert "Carlos" in resultado
         assert "RESERVADO" in resultado
 
-    def test_api_especialidades_vacia(self):
-        response = self.client.get(reverse("api_especialidades"))
+    def test_api_especialidades_vacia(self, client):
+        response = client.get(reverse("api_especialidades"))
         assert response.status_code == 200
         assert response.json()["especialidades"] == []
