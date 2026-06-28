@@ -133,8 +133,14 @@ function obtenerCookie(nombre) {
     return null;
 }
 
+function calcularDigitoVerificadorEsperado(resto) {
+    if (resto === 11) return "0";
+    if (resto === 10) return "K";
+    return String(resto);
+}
+
 function validarRut(rutCompleto) {
-    const rutLimpio = rutCompleto.replace(/[.\-]/g, "").trim();
+    const rutLimpio = rutCompleto.replace(/[.-]/g, "").trim();
     if (rutLimpio.length < 2) return false;
 
     const cuerpo = rutLimpio.slice(0, -1);
@@ -145,11 +151,11 @@ function validarRut(rutCompleto) {
     let suma = 0;
     let multiplo = 2;
     for (let i = cuerpo.length - 1; i >= 0; i--) {
-        suma += parseInt(cuerpo[i], 10) * multiplo;
+        suma += Number.parseInt(cuerpo[i], 10) * multiplo;
         multiplo = multiplo === 7 ? 2 : multiplo + 1;
     }
     const resto = 11 - (suma % 11);
-    const dvEsperado = resto === 11 ? "0" : resto === 10 ? "K" : String(resto);
+    const dvEsperado = calcularDigitoVerificadorEsperado(resto);
 
     return dv === dvEsperado;
 }
@@ -229,9 +235,10 @@ document.getElementById("form-registro").addEventListener("submit", async functi
             localStorage.setItem("sgtm_refresh_token", datos.refresh);
         }
 
-        window.location.href = URL_DESPUES_REGISTRO;
+        globalThis.location.href = URL_DESPUES_REGISTRO;
 
     } catch (error) {
+        console.error("Error en el registro:", error);
         mostrarError("Error de conexión con el servidor. Intente nuevamente.", false);
     } finally {
         ponerCargando(false);

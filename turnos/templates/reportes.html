@@ -205,17 +205,29 @@
     </a>
 </div>
 
+{% if datos_ocupacion %}
+{{ datos_ocupacion.labels|json_script:"datos-ocupacion-labels" }}
+{{ datos_ocupacion.valores|json_script:"datos-ocupacion-valores" }}
+{% endif %}
+{% if datos_ausentismo %}
+{{ datos_ausentismo.labels|json_script:"datos-ausentismo-labels" }}
+{{ datos_ausentismo.valores|json_script:"datos-ausentismo-valores" }}
+{% endif %}
+
 {% if datos_ocupacion or datos_ausentismo %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" integrity="sha384-N0/cnAvr9PfHnRDeRDFD9KOLttE0AwlxBcyvDOWf8s2zVmlNRYWvSrYImaSrjcvi" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     {% if datos_ocupacion %}
+    const labelsOcupacion = JSON.parse(document.getElementById('datos-ocupacion-labels').textContent);
+    const valoresOcupacion = JSON.parse(document.getElementById('datos-ocupacion-valores').textContent);
+
     new Chart(document.getElementById('chartOcupacion'), {
         type: 'doughnut',
         data: {
-            labels: {{ datos_ocupacion.labels|safe }},
+            labels: labelsOcupacion,
             datasets: [{
-                data: {{ datos_ocupacion.valores|safe }},
+                data: valoresOcupacion,
                 backgroundColor: ['#4F46E5', '#0EA5E9', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6']
             }]
         },
@@ -227,13 +239,16 @@ document.addEventListener("DOMContentLoaded", function () {
     {% endif %}
 
     {% if datos_ausentismo %}
+    const labelsAusentismo = JSON.parse(document.getElementById('datos-ausentismo-labels').textContent);
+    const valoresAusentismo = JSON.parse(document.getElementById('datos-ausentismo-valores').textContent);
+
     new Chart(document.getElementById('chartAusentismo'), {
         type: 'bar',
         data: {
-            labels: {{ datos_ausentismo.labels|safe }},
+            labels: labelsAusentismo,
             datasets: [{
                 label: 'No-shows',
-                data: {{ datos_ausentismo.valores|safe }},
+                data: valoresAusentismo,
                 backgroundColor: '#EF4444'
             }]
         },

@@ -140,7 +140,7 @@ document.getElementById("form-login").addEventListener("submit", async function 
         }
 
         if (respuesta.status === 403 && datos.bloqueado) {
-            window.location.href = URL_CUENTA_BLOQUEADA;
+            globalThis.location.href = URL_CUENTA_BLOQUEADA;
             return;
         }
 
@@ -152,9 +152,10 @@ document.getElementById("form-login").addEventListener("submit", async function 
         localStorage.setItem("sgtm_access_token", datos.access);
         localStorage.setItem("sgtm_refresh_token", datos.refresh);
 
-        window.location.href = URL_DESPUES_LOGIN;
+        globalThis.location.href = URL_DESPUES_LOGIN;
 
     } catch (error) {
+        console.error("Error en el login:", error);
         mostrarError("Error de conexión con el servidor. Intente nuevamente.");
     } finally {
         ponerCargando(false);
