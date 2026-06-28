@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow-sm mt-5">
+            <div class="card-body p-4">
+                <h3 class="card-title text-center mb-4">Iniciar Sesión</h3>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <!-- Renderizamos el formulario de Django con clases de Bootstrap -->
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">{{ field.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">Entrar al Sistema</button>
+                    </div>
+                </form>
+                
+                <div class="text-center mt-3">
+                    <small>¿No tienes una cuenta? <a href="{% url 'registro_paciente' %}">Regístrate aquí</a></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pequeño script para que los inputs de Django tomen el diseño de Bootstrap -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        let inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            if (input.type !== 'hidden' && input.type !== 'checkbox') {
+                input.classList.add('form-control');
+            }
+        });
+    });
+</script>
+{% endblock %}

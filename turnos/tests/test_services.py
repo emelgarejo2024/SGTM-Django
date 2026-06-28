@@ -87,6 +87,38 @@ class TestReservaFacade:
         assert exito is False
         assert "no existe" in mensaje
 
+    def test_falla_por_limite_reservas_br17(self, setup_datos):
+        """Verifica que un paciente no pueda superar el límite de 3 reservas activas."""
+        paciente, medico, bloque_nuevo = setup_datos
+        especialidad = Especialidad.objects.first()
+
+        # 1. Simulamos que el paciente ya tiene 3 reservas activas
+        for i in range(3):
+            bloque_previo = BloqueDisponibilidad.objects.create(
+                medico=medico,
+                especialidad=especialidad,
+                fecha=date.today() + timedelta(days=10 + i),
+                hora_inicio=time(9, 0),
+                hora_fin=time(9, 30),
+                esta_disponible=False
+            )
+            Reserva.objects.create(
+                paciente=paciente, 
+                bloque=bloque_previo, 
+                estado="RESERVADO"
+            )
+
+        # 2. Intentamos hacer la cuarta reserva usando el bloque de setup_datos
+        exito, mensaje = ReservaFacade.procesar_reserva_atomica(
+            bloque_id=bloque_nuevo.id, paciente=paciente
+        )
+
+        # 3. Verificamos que el sistema la rechace correctamente
+        assert exito is False
+        assert "límite máximo de 3 reservas activas" in mensaje
+        # Verificamos que en la BD solo existan las 3 reservas originales
+        assert Reserva.objects.filter(paciente=paciente).count() == 3
+
 
 @pytest.mark.django_db
 class TestReservaFacadeConsultas:

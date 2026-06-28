@@ -33,13 +33,36 @@
                 <span class="brand-subtitle">Gestión de Turnos Médicos</span>
             </span>
         </a>
-        <div class="nav-links">
+        <div class="nav-links d-flex align-items-center">
             <a href="/" class="nav-link-custom {% block nav_inicio %}{% endblock %}">
                 <i class="bi bi-house-door"></i> Inicio
             </a>
-            <a href="/admin/" class="nav-link-custom">
-                <i class="bi bi-gear"></i> Admin
-            </a>
+            
+            <!-- LÓGICA DE AUTENTICACIÓN MVP -->
+            {% if user.is_authenticated %}
+                <span class="nav-link-custom" style="opacity: 0.9; cursor: default;">
+                    <i class="bi bi-person-circle"></i> Hola, {{ user.first_name|default:user.username }}
+                </span>
+                <a href="{% url 'cerrar_sesion' %}" class="btn btn-outline-light btn-sm ms-2" style="border-radius: 8px;">
+                    <i class="bi bi-box-arrow-right"></i> Salir
+                </a>
+                
+                <!-- Solo mostramos el Admin si el usuario tiene permisos -->
+                {% if user.is_staff or user.is_superuser %}
+                    <a href="/admin/" class="nav-link-custom ms-2">
+                        <i class="bi bi-gear"></i> Admin
+                    </a>
+                {% endif %}
+            {% else %}
+                <a href="{% url 'iniciar_sesion' %}" class="nav-link-custom ms-2">
+                    <i class="bi bi-box-arrow-in-right"></i> Entrar
+                </a>
+                <a href="{% url 'registro_paciente' %}" class="btn btn-light btn-sm ms-2" style="border-radius: 8px; color: var(--primary-color, #0d6efd); font-weight: 600;">
+                    <i class="bi bi-person-plus"></i> Regístrate
+                </a>
+            {% endif %}
+            <!-- FIN LÓGICA DE AUTENTICACIÓN -->
+
         </div>
     </div>
 </nav>

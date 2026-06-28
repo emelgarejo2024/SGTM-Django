@@ -16,7 +16,7 @@ class TestVistas:
         self.client = Client()
 
     # ------------------------------------------------------------------ #
-    #  GET /                                                               #
+    #  GET /                                                             #
     # ------------------------------------------------------------------ #
     def test_index_devuelve_200(self):
         """La vista index debe responder con status 200."""
@@ -28,7 +28,6 @@ class TestVistas:
         Especialidad.objects.create(nombre="Radiología")
         response = self.client.get(reverse("index"))
         assert response.status_code == 200
-        # La clave 'especialidades' debe estar presente en el contexto
         assert "especialidades" in response.context
         nombres = list(
             response.context["especialidades"].values_list("nombre", flat=True)
@@ -36,7 +35,7 @@ class TestVistas:
         assert "Radiología" in nombres
 
     # ------------------------------------------------------------------ #
-    #  GET /agenda/                                                        #
+    #  GET /agenda/                                                      #
     # ------------------------------------------------------------------ #
     def test_agenda_devuelve_200(self):
         """La vista agenda debe responder con status 200."""
@@ -83,7 +82,7 @@ class TestVistas:
         assert response.context["especialidad"] == "Todas"
 
     # ------------------------------------------------------------------ #
-    #  GET /api/especialidades/                                            #
+    #  GET /api/especialidades/                                          #
     # ------------------------------------------------------------------ #
     def test_api_especialidades_devuelve_json(self):
         """La API JSON de especialidades retorna los datos correctos."""
@@ -96,21 +95,24 @@ class TestVistas:
         assert "Ortopedia" in nombres
 
     # ------------------------------------------------------------------ #
-    #  POST /reservar/                                                     #
+    #  POST /reservar/ (AHORA CON AUTENTICACIÓN)                         #
     # ------------------------------------------------------------------ #
-    def test_confirmar_reserva_sin_pacientes_redirige(self):
-        """Si no hay pacientes, confirmar_reserva redirige con error."""
+    def test_confirmar_reserva_sin_autenticacion_redirige_login(self):
+        """Si un usuario anónimo intenta reservar, es redirigido al login."""
         response = self.client.post(
             reverse("confirmar_reserva"), {"bloque_id": 1}
         )
         assert response.status_code == 302
-        assert response["Location"].endswith(reverse("index"))
+        assert "login" in response.url
 
     def test_confirmar_reserva_exitosa_redirige_a_index(self):
-        """Una reserva válida se crea y redirige al index."""
-        UsuarioFactory.crear_usuario(
+        """Un paciente autenticado crea la reserva y redirige al index."""
+        paciente = UsuarioFactory.crear_usuario(
             "PACIENTE", "30303030-3", "pac_view", "123", "V", "W", "vw@cl.cl"
         )
+        # Forzamos el login del paciente
+        self.client.force_login(paciente)
+
         medico = UsuarioFactory.crear_usuario(
             "MEDICO", "40404040-4", "dr_view", "123", "Dr", "V", "drv@cl.cl"
         )
@@ -123,14 +125,48 @@ class TestVistas:
             hora_inicio=time(15, 0),
             hora_fin=time(15, 30),
         )
+        
         response = self.client.post(
             reverse("confirmar_reserva"), {"bloque_id": bloque.id}
         )
         assert response.status_code == 302
         assert response["Location"].endswith(reverse("index"))
 
-    def test_confirmar_reserva_get_redirige_a_index(self):
-        """Un GET a /reservar/ (sin POST) redirige directamente a index."""
-        response = self.client.get(reverse("confirmar_reserva"))
+    def test_medico_no_puede_reservar(self):
+        """Verifica que un médico no pueda agendarse horas a sí mismo u otros."""
+        medico = UsuarioFactory.crear_usuario(
+            "MEDICO", "50505050-5", "dr_bad", "123", "M", "M", "mm@cl.cl"
+        )
+        self.client.force_login(medico)
+
+        response = self.client.post(
+            reverse("confirmar_reserva"), {"bloque_id": 1}
+        )
+        assert response.status_code == 302
+        assert response["Location"].endswith(reverse("index"))
+        # Debería haber un mensaje de error en la request, pero con el redirect a index basta para el test.
+
+    # ------------------------------------------------------------------ #
+    #  VISTAS DE AUTENTICACIÓN (NUEVAS)                                  #
+    # ------------------------------------------------------------------ #
+    def test_vista_registro_devuelve_200(self):
+        """La página de registro debe cargar correctamente."""
+        response = self.client.get(reverse("registro_paciente"))
+        assert response.status_code == 200
+        assert "form" in response.context
+
+    def test_vista_login_devuelve_200(self):
+        """La página de login debe cargar correctamente."""
+        response = self.client.get(reverse("iniciar_sesion"))
+        assert response.status_code == 200
+        assert "form" in response.context
+
+    def test_vista_logout_redirige_a_index(self):
+        """Cerrar sesión debe redirigir al index."""
+        paciente = UsuarioFactory.crear_usuario(
+            "PACIENTE", "60606060-6", "pac_logout", "123", "L", "O", "lo@cl.cl"
+        )
+        self.client.force_login(paciente)
+        response = self.client.get(reverse("cerrar_sesion"))
         assert response.status_code == 302
         assert response["Location"].endswith(reverse("index"))

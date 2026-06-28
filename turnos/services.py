@@ -2,19 +2,29 @@ from django.db import transaction
 from django.core.exceptions import ValidationError
 from .models import BloqueDisponibilidad, Reserva, Especialidad
 
-
 def reservar_bloque_seguro(bloque_id, paciente):
     """
     Implementa la Regla BR-13 del SRS: Atomicidad técnica.
     Bloquea la fila del bloque horario para evitar reservas dobles.
 
     Estrategia anti-overbooking de 3 capas:
-    Capa 1 (Schema):       OneToOneField en Reserva → Bloque
+    Capa 1 (Schema):     OneToOneField en Reserva → Bloque
     Capa 2 (Transaccional): select_for_update() + transaction.atomic()
     Capa 3 (Constraint):    clean() con validación de superposición
                             + CheckConstraint en DB
     """
     try:
+        # --- NUEVA CAPA DE REGLA DE NEGOCIO (BR-17) ---
+        # Validar límite de 3 reservas activas antes de bloquear la base de datos
+        reservas_activas = Reserva.objects.filter(
+            paciente=paciente,
+            estado__in=["RESERVADO", "CONFIRMADO"] 
+        ).count()
+
+        if reservas_activas >= 3:
+            return False, "Error: Has alcanzado el límite máximo de 3 reservas activas."
+        # ----------------------------------------------
+
         with transaction.atomic():
             # select_for_update() bloquea la fila en PostgreSQL
             # hasta que termine la transacción
@@ -25,7 +35,7 @@ def reservar_bloque_seguro(bloque_id, paciente):
             if bloque.esta_disponible:
                 # 1. Marcamos el bloque como ocupado
                 bloque.esta_disponible = False
-                # CAPA 3: Ejecuta clean() para evitar superposición
+                # CAPA 3: Ejecuta clean() para evitar superposición (BR-14)
                 bloque.full_clean()
                 bloque.save()
 
@@ -51,7 +61,7 @@ def reservar_bloque_seguro(bloque_id, paciente):
     except Exception as e:
         return False, f"Error inesperado: {str(e)}"
 
-
+# ... Tu clase ReservaFacade se mantiene exactamente igual ...
 class ReservaFacade:
     """
     Patrón Estructural Facade:
