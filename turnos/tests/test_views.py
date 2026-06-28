@@ -134,3 +134,14 @@ class TestVistas:
         response = self.client.get(reverse("confirmar_reserva"))
         assert response.status_code == 302
         assert response["Location"].endswith(reverse("index"))
+
+    def test_confirmar_reserva_falla_bloque_invalido(self):
+        UsuarioFactory.crear_usuario(
+            "PACIENTE", "55555555-5", "pac", "123", "A", "B", "a@a.cl"
+        )
+
+        response = self.client.post(
+            reverse("confirmar_reserva"), {"bloque_id": 9999}
+        )
+
+        assert response.status_code == 302                                                                                          
