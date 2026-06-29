@@ -129,7 +129,7 @@ document.getElementById("form-login").addEventListener("submit", async function 
                 "Content-Type": "application/json",
                 "X-CSRFToken": obtenerCookie("csrftoken"),
             },
-            body: JSON.stringify({ rut: rut, password: password }),
+            body: JSON.stringify({ username: rut, password: password }),
         });
 
         const datos = await respuesta.json();
