@@ -26,7 +26,7 @@ def vista_registro(request):
 def vista_cuenta_bloqueada(request):
     return render(request, "cuenta_bloqueada.html")
 
-
+@require_GET
 def vista_recuperar_password(request):
     """Renderiza la plantilla de recuperación (si existe)."""
     return render(request, "recuperar_password.html")
