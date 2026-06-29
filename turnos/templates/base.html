@@ -37,9 +37,16 @@
             <a href="/" class="nav-link-custom {% block nav_inicio %}{% endblock %}">
                 <i class="bi bi-house-door"></i> Inicio
             </a>
-            <!-- Aquí agregamos el botón de Login -->
-            <a href="{% url 'login' %}" class="nav-link-custom">
+            <!-- Estado: no autenticado -->
+            <a id="nav-btn-login" href="{% url 'login' %}" class="nav-link-custom" style="display:none;">
                 <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+            </a>
+            <!-- Estado: autenticado -->
+            <span id="nav-usuario-nombre" class="nav-link-custom" style="display:none; cursor:default; opacity:0.85;">
+                <i class="bi bi-person-circle"></i> <span id="nav-nombre-texto"></span>
+            </span>
+            <a id="nav-btn-logout" href="#" class="nav-link-custom" style="display:none;" onclick="cerrarSesion(); return false;">
+                <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
             </a>
         </div>
     </div>
@@ -95,5 +102,38 @@
 
 <!-- SGTM Custom JS -->
 <script src="{% static 'turnos/js/sgtm.js' %}"></script>
+
+<!-- Auth navbar: actualiza la navbar según el token JWT en localStorage -->
+<script>
+(function () {
+    const token = localStorage.getItem("sgtm_access_token");
+    const btnLogin = document.getElementById("nav-btn-login");
+    const spanNombre = document.getElementById("nav-usuario-nombre");
+    const textoNombre = document.getElementById("nav-nombre-texto");
+    const btnLogout = document.getElementById("nav-btn-logout");
+
+    if (token) {
+        try {
+            const payload = JSON.parse(atob(token.split(".")[1]));
+            textoNombre.textContent = payload.username || payload.email || "Usuario";
+        } catch (_) {
+            textoNombre.textContent = "Usuario";
+        }
+        spanNombre.style.display = "inline-flex";
+        btnLogout.style.display = "inline-flex";
+        btnLogin.style.display = "none";
+    } else {
+        btnLogin.style.display = "inline-flex";
+        spanNombre.style.display = "none";
+        btnLogout.style.display = "none";
+    }
+})();
+
+function cerrarSesion() {
+    localStorage.removeItem("sgtm_access_token");
+    localStorage.removeItem("sgtm_refresh_token");
+    window.location.href = "/login/";
+}
+</script>
 </body>
 </html>
