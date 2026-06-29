@@ -64,26 +64,16 @@ class BloqueDisponibilidad(models.Model):
         """
         super().clean()
 
-        if (
-            self.hora_inicio
-            and self.hora_fin
-            and self.hora_inicio >= self.hora_fin
-        ):
+        if self.hora_inicio and self.hora_fin and self.hora_inicio >= self.hora_fin:
             raise ValidationError(
                 {
                     "hora_fin": (
-                        "La hora de fin debe ser posterior a la "
-                        "hora de inicio."
+                        "La hora de fin debe ser posterior a la " "hora de inicio."
                     )
                 }
             )
 
-        if (
-            self.medico_id
-            and self.fecha
-            and self.hora_inicio
-            and self.hora_fin
-        ):
+        if self.medico_id and self.fecha and self.hora_inicio and self.hora_fin:
             bloques_superpuestos = BloqueDisponibilidad.objects.filter(
                 medico=self.medico,
                 fecha=self.fecha,
@@ -105,7 +95,7 @@ class BloqueDisponibilidad(models.Model):
                 )
 
     def __str__(self):
-        estado_str = 'Libre' if self.esta_disponible else 'Ocupado'
+        estado_str = "Libre" if self.esta_disponible else "Ocupado"
         return (
             f"Bloque: {self.medico.first_name} | {self.fecha} "
             f"{self.hora_inicio} - {estado_str}"
@@ -131,13 +121,9 @@ class Reserva(models.Model):
     )
     # Relación 1 a 1: Una reserva ocupa un solo bloque,
     # y un bloque tiene solo una reserva activa.
-    bloque = models.OneToOneField(
-        BloqueDisponibilidad, on_delete=models.PROTECT
-    )
+    bloque = models.OneToOneField(BloqueDisponibilidad, on_delete=models.PROTECT)
 
-    estado = models.CharField(
-        max_length=15, choices=ESTADOS, default="RESERVADO"
-    )
+    estado = models.CharField(max_length=15, choices=ESTADOS, default="RESERVADO")
     fecha_creacion = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

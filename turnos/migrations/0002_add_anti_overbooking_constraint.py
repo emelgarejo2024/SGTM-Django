@@ -6,16 +6,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('turnos', '0001_initial'),
+        ("turnos", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='especialidad',
-            options={'verbose_name': 'Especialidad', 'verbose_name_plural': 'Especialidades'},
+            name="especialidad",
+            options={
+                "verbose_name": "Especialidad",
+                "verbose_name_plural": "Especialidades",
+            },
         ),
         migrations.AddConstraint(
-            model_name='bloquedisponibilidad',
-            constraint=models.CheckConstraint(condition=models.Q(('hora_fin__gt', models.F('hora_inicio'))), name='bloque_hora_fin_despues_de_inicio'),
+            model_name="bloquedisponibilidad",
+            constraint=models.CheckConstraint(
+                condition=models.Q(("hora_fin__gt", models.F("hora_inicio"))),
+                name="bloque_hora_fin_despues_de_inicio",
+            ),
         ),
     ]

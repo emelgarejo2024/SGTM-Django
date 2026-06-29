@@ -14,15 +14,14 @@ from rest_framework.test import APIClient
 def api_client():
     return APIClient()
 
+
 # --- Fixture para crear un admin real compatible con el proyecto ---
 @pytest.fixture
 def admin_user():
     return Usuario.objects.create_superuser(
-        username='admin_test', 
-        password='password123', 
-        rut='11111111-1', 
-        rol='ADMIN'
+        username="admin_test", password="password123", rut="11111111-1", rol="ADMIN"
     )
+
 
 # --- Pruebas para Check-in ---
 @pytest.mark.django_db
@@ -32,12 +31,12 @@ def test_registrar_checkin_exitoso(api_client, admin_user, turno_reservado_hoy):
     turno_reservado_hoy.bloque.fecha = ahora.date()
     turno_reservado_hoy.bloque.hora_inicio = ahora.time()
     turno_reservado_hoy.bloque.save()
-    
+
     # 2. Generamos el token y probamos
     token = RefreshToken.for_user(admin_user).access_token
-    api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+    api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
 
-    url = reverse('registrar_checkin', args=[turno_reservado_hoy.id])
+    url = reverse("registrar_checkin", args=[turno_reservado_hoy.id])
     response = api_client.post(url)
 
     # 3. Si esto sigue tirando 400, imprime el error para ver qué dice el servicio
@@ -46,67 +45,71 @@ def test_registrar_checkin_exitoso(api_client, admin_user, turno_reservado_hoy):
 
     assert response.status_code == status.HTTP_200_OK
     turno_reservado_hoy.refresh_from_db()
-    assert turno_reservado_hoy.estado == 'EN_ESPERA'
+    assert turno_reservado_hoy.estado == "EN_ESPERA"
+
 
 # --- Pruebas para Cancelación ---
 @pytest.mark.django_db
 def test_cancelar_turno_exitoso(api_client, turno_cancelable):
     paciente = turno_cancelable.paciente
     token = RefreshToken.for_user(paciente).access_token
-    api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+    api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
 
-    url = reverse('cancelar_turno', args=[turno_cancelable.id])
+    url = reverse("cancelar_turno", args=[turno_cancelable.id])
     response = api_client.post(url)
 
     assert response.status_code == status.HTTP_200_OK
     turno_cancelable.refresh_from_db()
-    assert turno_cancelable.estado == 'CANCELADO'
+    assert turno_cancelable.estado == "CANCELADO"
     assert turno_cancelable.bloque.esta_disponible == True
+
 
 @pytest.mark.django_db
 def test_cancelar_turno_falla_por_tiempo(api_client, turno_no_cancelable):
     paciente = turno_no_cancelable.paciente
     token = RefreshToken.for_user(paciente).access_token
-    api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+    api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
 
-    url = reverse('cancelar_turno', args=[turno_no_cancelable.id])
+    url = reverse("cancelar_turno", args=[turno_no_cancelable.id])
     response = api_client.post(url)
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     turno_no_cancelable.refresh_from_db()
-    assert turno_no_cancelable.estado == 'RESERVADO'
+    assert turno_no_cancelable.estado == "RESERVADO"
+
 
 # --- Pruebas para Bloqueo ---
 @pytest.mark.django_db
 def test_bloquear_agenda_exitoso(api_client, admin_user):
-    medico = Usuario.objects.create(username='dr_prueba', rut='9999999-9', rol='MEDICO')
-    especialidad = Especialidad.objects.create(nombre='General')
+    medico = Usuario.objects.create(username="dr_prueba", rut="9999999-9", rol="MEDICO")
+    especialidad = Especialidad.objects.create(nombre="General")
     fecha_hoy = timezone.now().date()
 
     bloque = BloqueDisponibilidad.objects.create(
-        medico=medico, 
-        especialidad=especialidad, 
+        medico=medico,
+        especialidad=especialidad,
         fecha=fecha_hoy,
-        hora_inicio='10:00:00', 
-        hora_fin='10:30:00', 
-        esta_disponible=True
+        hora_inicio="10:00:00",
+        hora_fin="10:30:00",
+        esta_disponible=True,
     )
 
     token = RefreshToken.for_user(admin_user).access_token
-    api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+    api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
 
-    url = reverse('bloquear_agenda')
+    url = reverse("bloquear_agenda")
     payload = {
-        'medico_id': medico.id,
-        'fecha_inicio': str(fecha_hoy),
-        'fecha_fin': str(fecha_hoy)
+        "medico_id": medico.id,
+        "fecha_inicio": str(fecha_hoy),
+        "fecha_fin": str(fecha_hoy),
     }
 
-    response = api_client.post(url, payload, format='json')
+    response = api_client.post(url, payload, format="json")
 
     assert response.status_code == status.HTTP_200_OK
     bloque.refresh_from_db()
     assert bloque.esta_disponible == False
+
 
 @pytest.mark.django_db
 class TestVistas:
@@ -202,9 +205,7 @@ class TestVistas:
     # ------------------------------------------------------------------ #
     def test_confirmar_reserva_sin_pacientes_redirige(self):
         """Si no hay pacientes, confirmar_reserva redirige con error."""
-        response = self.client.post(
-            reverse("confirmar_reserva"), {"bloque_id": 1}
-        )
+        response = self.client.post(reverse("confirmar_reserva"), {"bloque_id": 1})
         assert response.status_code == 302
         assert response["Location"].endswith(reverse("index"))
 
@@ -242,11 +243,6 @@ class TestVistas:
             "PACIENTE", "55555555-5", "pac", "123", "A", "B", "a@a.cl"
         )
 
-        response = self.client.post(
-            reverse("confirmar_reserva"), {"bloque_id": 9999}
-        )
+        response = self.client.post(reverse("confirmar_reserva"), {"bloque_id": 9999})
 
-        assert response.status_code == 302     
-
-
-                                                                                         
+        assert response.status_code == 302

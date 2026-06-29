@@ -5,66 +5,75 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from .models import BloqueDisponibilidad, Reserva, Especialidad
 
+
 class TurnoService:
     @staticmethod
     def registrar_checkin(turno_id, usuario_ejecutor):
         # Usamos select_related para traer el bloque al mismo tiempo y optimizar la BD
-        reserva = Reserva.objects.select_related('bloque').get(id=turno_id)
-        
+        reserva = Reserva.objects.select_related("bloque").get(id=turno_id)
+
         # BR-21 y BR-22: Validar estado y tiempo de tolerancia
-        if reserva.estado != 'RESERVADO':
-            raise DRFValidationError("La reserva no está en estado válido para check-in.")
-            
+        if reserva.estado != "RESERVADO":
+            raise DRFValidationError(
+                "La reserva no está en estado válido para check-in."
+            )
+
         ahora = timezone.localtime(timezone.now())
-        
+
         # Como fecha y hora_inicio están separados, los combinamos
         fecha_hora_inicio = timezone.make_aware(
             datetime.combine(reserva.bloque.fecha, reserva.bloque.hora_inicio)
         )
-        
+
         margen_inicio = fecha_hora_inicio - timedelta(minutes=30)
         margen_fin = fecha_hora_inicio + timedelta(minutes=10)
-        
+
         if not (margen_inicio <= ahora <= margen_fin):
-            raise DRFValidationError("Fuera del margen de tiempo permitido para el check-in presencial.")
-            
-        reserva.estado = 'EN_ESPERA'
+            raise DRFValidationError(
+                "Fuera del margen de tiempo permitido para el check-in presencial."
+            )
+
+        reserva.estado = "EN_ESPERA"
         reserva.save()
         return "Check-in exitoso"
 
     @staticmethod
     def cancelar_turno(turno_id, usuario_ejecutor):
-        reserva = Reserva.objects.select_related('bloque').get(id=turno_id)
-        
+        reserva = Reserva.objects.select_related("bloque").get(id=turno_id)
+
         # BR-24: Cancelación con 12 horas de anticipación mínima
         ahora = timezone.localtime(timezone.now())
         fecha_hora_inicio = timezone.make_aware(
             datetime.combine(reserva.bloque.fecha, reserva.bloque.hora_inicio)
         )
-        
+
         diferencia = fecha_hora_inicio - ahora
         if diferencia < timedelta(hours=12):
-            raise DRFValidationError("No se puede cancelar con menos de 12 horas de anticipación.")
-            
+            raise DRFValidationError(
+                "No se puede cancelar con menos de 12 horas de anticipación."
+            )
+
         # BR-25: Cambiar estado y liberar el bloque
-        reserva.estado = 'CANCELADO'
-        reserva.bloque.esta_disponible = True  
-        
+        reserva.estado = "CANCELADO"
+        reserva.bloque.esta_disponible = True
+
         reserva.bloque.save()
         reserva.save()
         return "Turno cancelado y bloque liberado"
+
 
 class AgendaService:
     @staticmethod
     def bloquear_tramos(medico_id, fecha_inicio, fecha_fin, usuario_ejecutor):
         # Buscamos los bloques libres en ese rango
         bloques = BloqueDisponibilidad.objects.filter(
-            medico_id=medico_id, 
+            medico_id=medico_id,
             fecha__range=[fecha_inicio, fecha_fin],
-            esta_disponible=True
+            esta_disponible=True,
         )
         afectados = bloques.update(esta_disponible=False)
         return afectados
+
 
 def reservar_bloque_seguro(bloque_id, paciente):
     """
@@ -81,9 +90,7 @@ def reservar_bloque_seguro(bloque_id, paciente):
         with transaction.atomic():
             # select_for_update() bloquea la fila en PostgreSQL
             # hasta que termine la transacción
-            bloque = BloqueDisponibilidad.objects.select_for_update().get(
-                id=bloque_id
-            )
+            bloque = BloqueDisponibilidad.objects.select_for_update().get(id=bloque_id)
 
             if bloque.esta_disponible:
                 # 1. Marcamos el bloque como ocupado
