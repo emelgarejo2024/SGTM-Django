@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from turnos import views, views_frontend 
+from turnos import views
 
 urlpatterns = [
     # --- Rutas del Frontend (Vistas HTML) ---
@@ -32,10 +32,5 @@ urlpatterns = [
         views.cancelar_turno,
         name="cancelar_turno",
     ),
-    path("api/agenda/bloquear/", views.bloquear_agenda, name="bloquear_agenda"),
-    path('checkin/', views_frontend.vista_checkin, name='checkin'),
-    path('historial/', views.vista_historial, name='historial'),
-    path('reagendar/', views.vista_reagendar, name='reagendar_turno'),
-    path('reportes/', views.vista_reportes, name='reportes'),
-    path('penalizacion/', views.vista_penalizacion, name='levantar_penalizacion'),
+        path("api/agenda/bloquear/", views.bloquear_agenda, name="bloquear_agenda"),
 ]
