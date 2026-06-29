@@ -11,17 +11,18 @@ from rest_framework.permissions import AllowAny
 from django.db import IntegrityError
 from rest_framework_simplejwt.tokens import RefreshToken
 from .services import TurnoService, AgendaService
+from django.views.decorators.http import require_GET
 
-
+@require_GET
 def vista_login(request):
     """Renderiza la plantilla HTML del login."""
     return render(request, "login.html")
 
-
+@require_GET
 def vista_registro(request):
     return render(request, "registro.html")
 
-
+@require_GET
 def vista_cuenta_bloqueada(request):
     return render(request, "cuenta_bloqueada.html")
 
