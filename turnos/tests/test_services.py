@@ -139,16 +139,12 @@ class TestReservaFacadeConsultas:
     ):
         """Cubre rama de filtro por especialidad — líneas 61-62."""
         esp1, esp2, bloque1, bloque2, *_ = datos_consulta
-        bloques = ReservaFacade.obtener_bloques_disponibles(
-            especialidad_id=esp1.id
-        )
+        bloques = ReservaFacade.obtener_bloques_disponibles(especialidad_id=esp1.id)
         ids = [b.id for b in bloques]
         assert bloque1.id in ids
         assert bloque2.id not in ids
 
-    def test_obtener_bloques_disponibles_filtrado_por_fecha(
-        self, datos_consulta
-    ):
+    def test_obtener_bloques_disponibles_filtrado_por_fecha(self, datos_consulta):
         """Cubre rama de filtro por fecha — líneas 63-64."""
         *_, bloque1, bloque2, manana, pasado = datos_consulta
         bloques = ReservaFacade.obtener_bloques_disponibles(fecha=manana)

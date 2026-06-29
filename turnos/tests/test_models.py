@@ -5,6 +5,7 @@ from turnos.models import Especialidad, BloqueDisponibilidad, Reserva
 from turnos.factories import UsuarioFactory
 from django.urls import reverse
 
+
 @pytest.mark.django_db
 class TestModelos:
 
