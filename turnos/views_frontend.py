@@ -14,6 +14,15 @@ reales en views.py, sin tocar ninguna plantilla.
 from datetime import date, timedelta
 
 from django.shortcuts import render
+from django.views.decorators.http import require_http_methods
+
+# Constantes de datos simulados (evita literales duplicados detectados
+# por SonarQube en múltiples funciones de este archivo).
+MEDICO_NOMBRE_DEMO = "Andrés"
+MEDICO_APELLIDO_DEMO = "Fuentes"
+PACIENTE_NOMBRE_DEMO = "María"
+PACIENTE_APELLIDO_DEMO = "González"
+ESPECIALIDAD_DEMO = "Cardiología"
 
 
 class _ObjetoSimulado:
@@ -45,22 +54,30 @@ class _ObjetoSimulado:
         return mapa_estados.get(self.estado, self.estado)
 
 
-def _crear_medico_simulado(nombre, apellido):
-    return _ObjetoSimulado({"first_name": nombre, "last_name": apellido})
-
-
-def _crear_paciente_simulado(nombre, apellido, rut):
+def _crear_medico_demo():
     return _ObjetoSimulado(
-        {"first_name": nombre, "last_name": apellido, "rut": rut}
+        {"first_name": MEDICO_NOMBRE_DEMO, "last_name": MEDICO_APELLIDO_DEMO}
     )
 
 
-def _crear_bloque_simulado(medico, especialidad, fecha, hora_inicio, hora_fin):
+def _crear_paciente_demo(rut="11111111-1"):
+    return _ObjetoSimulado(
+        {
+            "first_name": PACIENTE_NOMBRE_DEMO,
+            "last_name": PACIENTE_APELLIDO_DEMO,
+            "rut": rut,
+        }
+    )
+
+
+def _crear_bloque_demo(medico, fecha, hora_inicio, hora_fin, especialidad=None):
     return _ObjetoSimulado(
         {
             "id": 1,
             "medico": medico,
-            "especialidad": _ObjetoSimulado({"nombre": especialidad}),
+            "especialidad": _ObjetoSimulado(
+                {"nombre": especialidad or ESPECIALIDAD_DEMO}
+            ),
             "fecha": fecha,
             "hora_inicio": hora_inicio,
             "hora_fin": hora_fin,
@@ -69,7 +86,7 @@ def _crear_bloque_simulado(medico, especialidad, fecha, hora_inicio, hora_fin):
     )
 
 
-def _crear_turno_simulado(turno_id, paciente, bloque, estado):
+def _crear_turno_demo(turno_id, paciente, bloque, estado):
     return _ObjetoSimulado(
         {"id": turno_id, "paciente": paciente, "bloque": bloque, "estado": estado}
     )
@@ -78,17 +95,18 @@ def _crear_turno_simulado(turno_id, paciente, bloque, estado):
 # --------------------------------------------------------------------------- #
 #  UC-02: Check-in presencial
 # --------------------------------------------------------------------------- #
+@require_http_methods(["GET"])
 def checkin_simulado(request):
     query = request.GET.get("q", "")
     turnos = []
 
     if query:
-        medico = _crear_medico_simulado("Carla", "Núñez")
-        paciente = _crear_paciente_simulado("Juan", "Pérez", "12345678-9")
-        bloque = _crear_bloque_simulado(
-            medico, "Medicina General", date.today(), "09:00", "09:30"
+        medico = _crear_medico_demo()
+        paciente = _crear_paciente_demo("12345678-9")
+        bloque = _crear_bloque_demo(
+            medico, date.today(), "09:00", "09:30", "Medicina General"
         )
-        turnos = [_crear_turno_simulado(1, paciente, bloque, "RESERVADO")]
+        turnos = [_crear_turno_demo(1, paciente, bloque, "RESERVADO")]
 
     return render(request, "checkin.html", {"query": query, "turnos": turnos})
 
@@ -96,23 +114,24 @@ def checkin_simulado(request):
 # --------------------------------------------------------------------------- #
 #  UC-03, UC-06, UC-08: Historial del paciente
 # --------------------------------------------------------------------------- #
+@require_http_methods(["GET"])
 def historial_simulado(request):
     filtro_activo = request.GET.get("filtro", "futuros")
 
-    medico = _crear_medico_simulado("Andrés", "Fuentes")
-    paciente = _crear_paciente_simulado("María", "González", "11111111-1")
+    medico = _crear_medico_demo()
+    paciente = _crear_paciente_demo()
 
-    bloque_reservado = _crear_bloque_simulado(
-        medico, "Cardiología", date.today() + timedelta(days=5), "10:00", "10:30"
+    bloque_reservado = _crear_bloque_demo(
+        medico, date.today() + timedelta(days=5), "10:00", "10:30"
     )
-    bloque_confirmado = _crear_bloque_simulado(
-        medico, "Cardiología", date.today() + timedelta(days=2), "11:00", "11:30"
+    bloque_confirmado = _crear_bloque_demo(
+        medico, date.today() + timedelta(days=2), "11:00", "11:30"
     )
 
-    turno_reservado = _crear_turno_simulado(1, paciente, bloque_reservado, "RESERVADO")
+    turno_reservado = _crear_turno_demo(1, paciente, bloque_reservado, "RESERVADO")
     turno_reservado.puede_cancelar = True
 
-    turno_confirmado = _crear_turno_simulado(2, paciente, bloque_confirmado, "CONFIRMADO")
+    turno_confirmado = _crear_turno_demo(2, paciente, bloque_confirmado, "CONFIRMADO")
     turno_confirmado.puede_cancelar = False
 
     turnos = [turno_reservado, turno_confirmado] if filtro_activo != "pasados" else []
@@ -127,24 +146,24 @@ def historial_simulado(request):
 # --------------------------------------------------------------------------- #
 #  UC-03: Reagendar turno
 # --------------------------------------------------------------------------- #
+@require_http_methods(["GET"])
 def reagendar_turno_simulado(request, turno_id):
-    medico = _crear_medico_simulado("Andrés", "Fuentes")
-    paciente = _crear_paciente_simulado("María", "González", "11111111-1")
+    medico = _crear_medico_demo()
+    paciente = _crear_paciente_demo()
     fecha_buscada = request.GET.get("fecha", "")
 
-    bloque_original = _crear_bloque_simulado(
-        medico, "Cardiología", date.today() + timedelta(days=5), "10:00", "10:30"
+    bloque_original = _crear_bloque_demo(
+        medico, date.today() + timedelta(days=5), "10:00", "10:30"
     )
-    turno_original = _crear_turno_simulado(turno_id, paciente, bloque_original, "RESERVADO")
+    turno_original = _crear_turno_demo(turno_id, paciente, bloque_original, "RESERVADO")
 
     bloques_disponibles = []
     if fecha_buscada != "2099-01-01":
-        bloques_disponibles = [
-            _crear_bloque_simulado(
-                medico, "Cardiología", date.today() + timedelta(days=6), "10:00", "10:30"
-            ),
-        ]
-        bloques_disponibles[0].id = 99
+        bloque_alternativo = _crear_bloque_demo(
+            medico, date.today() + timedelta(days=6), "10:00", "10:30"
+        )
+        bloque_alternativo.id = 99
+        bloques_disponibles = [bloque_alternativo]
 
     return render(
         request,
@@ -160,10 +179,11 @@ def reagendar_turno_simulado(request, turno_id):
 # --------------------------------------------------------------------------- #
 #  FR-23, FR-24: Panel de reportes
 # --------------------------------------------------------------------------- #
+@require_http_methods(["GET"])
 def reportes_simulado(request):
     especialidades = [
         _ObjetoSimulado({"id": 1, "nombre": "Medicina General"}),
-        _ObjetoSimulado({"id": 2, "nombre": "Cardiología"}),
+        _ObjetoSimulado({"id": 2, "nombre": ESPECIALIDAD_DEMO}),
         _ObjetoSimulado({"id": 3, "nombre": "Pediatría"}),
     ]
 
@@ -179,8 +199,8 @@ def reportes_simulado(request):
     detalle_profesionales = [
         {
             "medico_id": 1,
-            "medico_nombre": "Andrés Fuentes",
-            "especialidad": "Cardiología",
+            "medico_nombre": f"{MEDICO_NOMBRE_DEMO} {MEDICO_APELLIDO_DEMO}",
+            "especialidad": ESPECIALIDAD_DEMO,
             "total_turnos": 40,
             "ejecutados": 35,
             "no_shows": 3,
@@ -209,14 +229,17 @@ def reportes_simulado(request):
 # --------------------------------------------------------------------------- #
 #  UC-07, UC-10: Login y registro
 # --------------------------------------------------------------------------- #
+@require_http_methods(["GET"])
 def login_simulado(request):
     return render(request, "login.html")
 
 
+@require_http_methods(["GET"])
 def registro_simulado(request):
     return render(request, "registro.html")
 
 
+@require_http_methods(["GET"])
 def cuenta_bloqueada_simulada(request):
     return render(
         request,
@@ -228,13 +251,12 @@ def cuenta_bloqueada_simulada(request):
 # --------------------------------------------------------------------------- #
 #  Módulo recepción/admin/médico
 # --------------------------------------------------------------------------- #
+@require_http_methods(["GET"])
 def calendario_global_simulado(request):
-    medico = _crear_medico_simulado("Andrés", "Fuentes")
-    paciente = _crear_paciente_simulado("María", "González", "11111111-1")
-    bloque = _crear_bloque_simulado(
-        medico, "Cardiología", date.today(), "10:00", "10:30"
-    )
-    turno = _crear_turno_simulado(1, paciente, bloque, "RESERVADO")
+    medico = _crear_medico_demo()
+    paciente = _crear_paciente_demo()
+    bloque = _crear_bloque_demo(medico, date.today(), "10:00", "10:30")
+    turno = _crear_turno_demo(1, paciente, bloque, "RESERVADO")
 
     return render(
         request,
@@ -243,19 +265,19 @@ def calendario_global_simulado(request):
     )
 
 
+@require_http_methods(["GET"])
 def sobrecupo_simulado(request):
-    medico = _crear_medico_simulado("Andrés", "Fuentes")
-    bloque = _crear_bloque_simulado(
-        medico, "Cardiología", date.today(), "12:00", "12:30"
-    )
+    medico = _crear_medico_demo()
+    bloque = _crear_bloque_demo(medico, date.today(), "12:00", "12:30")
     return render(request, "sobrecupo.html", {"bloque": bloque})
 
 
+@require_http_methods(["GET"])
 def config_disponibilidad_simulada(request):
-    especialidades = [_ObjetoSimulado({"id": 1, "nombre": "Cardiología"})]
-    medico = _crear_medico_simulado("Andrés", "Fuentes")
-    bloque = _crear_bloque_simulado(
-        medico, "Cardiología", date.today() + timedelta(days=1), "09:00", "09:30"
+    especialidades = [_ObjetoSimulado({"id": 1, "nombre": ESPECIALIDAD_DEMO})]
+    medico = _crear_medico_demo()
+    bloque = _crear_bloque_demo(
+        medico, date.today() + timedelta(days=1), "09:00", "09:30"
     )
     return render(
         request,
@@ -268,13 +290,12 @@ def config_disponibilidad_simulada(request):
     )
 
 
+@require_http_methods(["GET"])
 def agenda_medico_simulada(request):
-    paciente = _crear_paciente_simulado("María", "González", "11111111-1")
-    medico = _crear_medico_simulado("Andrés", "Fuentes")
-    bloque = _crear_bloque_simulado(
-        medico, "Cardiología", date.today(), "10:00", "10:30"
-    )
-    turno = _crear_turno_simulado(1, paciente, bloque, "EN_SALA_ESPERA")
+    paciente = _crear_paciente_demo()
+    medico = _crear_medico_demo()
+    bloque = _crear_bloque_demo(medico, date.today(), "10:00", "10:30")
+    turno = _crear_turno_demo(1, paciente, bloque, "EN_SALA_ESPERA")
 
     return render(
         request,
@@ -283,10 +304,11 @@ def agenda_medico_simulada(request):
     )
 
 
+@require_http_methods(["GET"])
 def bloquear_agenda_simulada(request):
-    medico = _crear_medico_simulado("Andrés", "Fuentes")
-    bloque = _crear_bloque_simulado(
-        medico, "Cardiología", date.today() + timedelta(days=3), "15:00", "15:30"
+    medico = _crear_medico_demo()
+    bloque = _crear_bloque_demo(
+        medico, date.today() + timedelta(days=3), "15:00", "15:30"
     )
     return render(
         request,
@@ -295,14 +317,21 @@ def bloquear_agenda_simulada(request):
     )
 
 
+@require_http_methods(["GET"])
 def levantar_penalizacion_simulada(request):
     rut_buscado = request.GET.get("rut", "")
     paciente_bloqueado = None
 
     if rut_buscado:
-        paciente_bloqueado = _crear_paciente_simulado("Pedro", "Ramírez", rut_buscado)
-        paciente_bloqueado.id = 1
-        paciente_bloqueado.cantidad_no_shows = 2
+        paciente_bloqueado = _ObjetoSimulado(
+            {
+                "first_name": "Pedro",
+                "last_name": "Ramírez",
+                "rut": rut_buscado,
+                "id": 1,
+                "cantidad_no_shows": 2,
+            }
+        )
 
     return render(
         request,
