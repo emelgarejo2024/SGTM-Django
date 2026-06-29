@@ -33,12 +33,13 @@
                 <span class="brand-subtitle">Gestión de Turnos Médicos</span>
             </span>
         </a>
-        <div class="nav-links">
+<div class="nav-links">
             <a href="/" class="nav-link-custom {% block nav_inicio %}{% endblock %}">
                 <i class="bi bi-house-door"></i> Inicio
             </a>
-            <a href="/admin/" class="nav-link-custom">
-                <i class="bi bi-gear"></i> Admin
+            <!-- Aquí agregamos el botón de Login -->
+            <a href="{% url 'login' %}" class="nav-link-custom">
+                <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
             </a>
         </div>
     </div>
