@@ -56,7 +56,9 @@ class TestVistasFrontendSimuladas:
         )
 
     def test_reportes_con_filtro_de_mes_y_especialidad(self, client):
-        response = client.get(reverse("reportes"), {"mes": "2026-06", "especialidad": "2"})
+        response = client.get(
+            reverse("reportes"), {"mes": "2026-06", "especialidad": "2"}
+        )
         assert response.status_code == 200
         assert response.context["mes_seleccionado"] == "2026-06"
         assert response.context["especialidad_seleccionada"] == "2"
@@ -70,9 +72,7 @@ class TestVistasFrontendSimuladas:
         assert response.context["paciente_bloqueado"] is None
 
     def test_levantar_penalizacion_con_rut_busca_paciente(self, client):
-        response = client.get(
-            reverse("levantar_penalizacion"), {"rut": "99999999-9"}
-        )
+        response = client.get(reverse("levantar_penalizacion"), {"rut": "99999999-9"})
         assert response.status_code == 200
         paciente = response.context["paciente_bloqueado"]
         assert paciente is not None

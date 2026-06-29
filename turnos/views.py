@@ -57,7 +57,7 @@ def cancelar_turno(request, turno_id):
     Cancela una cita médica. El servicio validará si faltan más de 12 horas.
     """
     try:
-        resultado = TurnoService.cancelar_turno(turno_id, usuario_ejecutor=request.user)
+        TurnoService.cancelar_turno(turno_id, usuario_ejecutor=request.user)
         return Response(
             {"mensaje": "Turno cancelado correctamente y bloque liberado."},
             status=status.HTTP_200_OK,

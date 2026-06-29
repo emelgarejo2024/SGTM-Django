@@ -61,7 +61,7 @@ def test_cancelar_turno_exitoso(api_client, turno_cancelable):
     assert response.status_code == status.HTTP_200_OK
     turno_cancelable.refresh_from_db()
     assert turno_cancelable.estado == "CANCELADO"
-    assert turno_cancelable.bloque.esta_disponible == True
+    assert turno_cancelable.bloque.esta_disponible
 
 
 @pytest.mark.django_db
@@ -108,7 +108,7 @@ def test_bloquear_agenda_exitoso(api_client, admin_user):
 
     assert response.status_code == status.HTTP_200_OK
     bloque.refresh_from_db()
-    assert bloque.esta_disponible == False
+    assert not bloque.esta_disponible
 
 
 @pytest.mark.django_db
