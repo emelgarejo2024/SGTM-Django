@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from turnos import views
+from turnos import views, views_frontend 
 
 urlpatterns = [
     # --- Rutas del Frontend (Vistas HTML) ---
