@@ -18,7 +18,6 @@ from selenium.webdriver.chrome.options import Options
 
 from turnos.factories import (
     BloqueDisponibilidadFactory,
-    EspecialidadFactory,
     ReservaFactory,
     UsuarioFactory,
 )
