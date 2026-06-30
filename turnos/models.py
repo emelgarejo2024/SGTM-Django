@@ -67,10 +67,9 @@ class BloqueDisponibilidad(models.Model):
         if self.hora_inicio and self.hora_fin and self.hora_inicio >= self.hora_fin:
             raise ValidationError(
                 {
-                    "hora_fin": (
-                        "La hora de fin debe ser posterior a la " "hora de inicio."
-                    )
+                    "hora_fin": "La hora de fin debe ser posterior a la hora de inicio."
                 }
+
             )
 
         if self.medico_id and self.fecha and self.hora_inicio and self.hora_fin:
@@ -119,9 +118,9 @@ class Reserva(models.Model):
         related_name="reservas_paciente",
         limit_choices_to={"rol": "PACIENTE"},
     )
-    # Relación 1 a 1: Una reserva ocupa un solo bloque,
-    # y un bloque tiene solo una reserva activa.
-    bloque = models.OneToOneField(BloqueDisponibilidad, on_delete=models.PROTECT)
+    # Relación cambiada a ForeignKey para permitir que un bloque tenga historial
+    # de reservas pasadas (ej. canceladas) y una reserva activa nueva.
+    bloque = models.ForeignKey(BloqueDisponibilidad, on_delete=models.PROTECT)
 
     estado = models.CharField(max_length=15, choices=ESTADOS, default="RESERVADO")
     fecha_creacion = models.DateTimeField(auto_now_add=True)

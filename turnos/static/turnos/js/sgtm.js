@@ -22,6 +22,54 @@ function initToasts() {
             setTimeout(function() { toast.remove(); }, 400);
         }, 5000);
     });
+
+    // Revisar si hay un toast en sessionStorage (para mostrar después de un redirect JS)
+    const pendingToast = sessionStorage.getItem("sgtm_pending_toast");
+    if (pendingToast) {
+        try {
+            const toastData = JSON.parse(pendingToast);
+            mostrarToastJS(toastData.tipo, toastData.titulo, toastData.mensaje);
+            sessionStorage.removeItem("sgtm_pending_toast");
+        } catch (e) {}
+    }
+}
+
+/**
+ * Muestra un toast generado 100% en JS con el mismo estilo de Django messages
+ */
+function mostrarToastJS(tipo, titulo, mensaje) {
+    let container = document.querySelector('.sgtm-toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'sgtm-toast-container';
+        document.querySelector('.main-content').insertBefore(container, document.querySelector('.main-content').firstChild);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `sgtm-toast sgtm-toast-${tipo === 'error' ? 'danger' : 'success'}`;
+    toast.setAttribute('role', 'alert');
+    
+    const iconClass = tipo === 'error' ? 'bi-exclamation-circle-fill' : 'bi-check-circle-fill';
+    
+    toast.innerHTML = `
+        <div class="sgtm-toast-icon">
+            <i class="bi ${iconClass}"></i>
+        </div>
+        <div class="sgtm-toast-body">
+            <strong>${titulo}</strong>
+            <span>${mensaje}</span>
+        </div>
+        <button class="sgtm-toast-close" onclick="this.parentElement.remove()">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    `;
+    
+    container.appendChild(toast);
+    
+    setTimeout(function() {
+        toast.style.animation = 'toastSlideOut 0.4s ease-in forwards';
+        setTimeout(function() { toast.remove(); }, 400);
+    }, 5000);
 }
 
 /**

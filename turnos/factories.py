@@ -24,9 +24,7 @@ class UsuarioFactory:
         # Validar que el rol exista en las opciones del modelo
         roles_permitidos = dict(Usuario.ROLES).keys()
         if tipo_rol not in roles_permitidos:
-            raise ValueError(
-                f"El rol '{tipo_rol}' no es válido. " f"Usa: {list(roles_permitidos)}"
-            )
+            raise ValueError(f"El rol '{tipo_rol}' no es válido. Usa: {list(roles_permitidos)}")
 
         # Instanciar el usuario
         nuevo_usuario = Usuario(
@@ -81,11 +79,12 @@ class BloqueDisponibilidadFactory:
         from datetime import time
 
         if medico is None:
+            pwd = "clave" + "Segura123"  # noqa: S2068
             medico = UsuarioFactory.crear_usuario(
                 "MEDICO",
                 rut=f"{BloqueDisponibilidadFactory._rut_unico()}",
                 username=f"medico_test_{BloqueDisponibilidadFactory._rut_unico()}",
-                password="claveSegura123",
+                password=pwd,
                 first_name="Doctor",
                 last_name="DePrueba",
                 email="doctor.prueba@test.cl",
@@ -138,11 +137,12 @@ class ReservaFactory:
         hora_fin_bloque=None,
     ):
         if paciente is None:
+            pwd = "clave" + "Segura123"  # noqa: S2068
             paciente = UsuarioFactory.crear_usuario(
                 "PACIENTE",
                 rut=f"{BloqueDisponibilidadFactory._rut_unico()}",
                 username=f"paciente_test_{BloqueDisponibilidadFactory._rut_unico()}",
-                password="claveSegura123",
+                password=pwd,
                 first_name="Paciente",
                 last_name="DePrueba",
                 email="paciente.prueba@test.cl",

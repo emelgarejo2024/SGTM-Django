@@ -87,7 +87,7 @@
                         </span>
                     </td>
                     <td style="text-align: center;">
-                        <form method="POST" action="{% url 'confirmar_reserva' %}" style="display: inline;">
+                        <form method="POST" action="#" class="form-reservar" style="display: inline;">
                             {% csrf_token %}
                             <input type="hidden" name="bloque_id" value="{{ bloque.id }}">
                             <button type="submit" class="btn-reservar">
@@ -116,4 +116,59 @@
     </a>
 </div>
 
-{% endblock %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const forms = document.querySelectorAll('.form-reservar');
+    forms.forEach(form => {
+        form.addEventListener("submit", function(e) {
+            e.preventDefault();
+            const token = localStorage.getItem("sgtm_access_token");
+            if (!token) {
+                alert("Debes iniciar sesión para reservar un turno.");
+                window.location.href = "/login/";
+                return;
+            }
+            
+            const bloque_id = form.querySelector('input[name="bloque_id"]').value;
+            
+            fetch('/api/turnos/reservar/', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({bloque_id: parseInt(bloque_id)})
+            })
+            .then(r => r.json().then(data => ({status: r.status, body: data})))
+            .then(res => {
+                if (res.status === 200 || res.status === 201) {
+                    // Guardamos el toast en sessionStorage para que se muestre en el historial
+                    sessionStorage.setItem("sgtm_pending_toast", JSON.stringify({
+                        tipo: "success",
+                        titulo: "¡Éxito!",
+                        mensaje: res.body.mensaje || "Turno reservado correctamente."
+                    }));
+                    window.location.href = "/historial/";
+                } else {
+                    // Mostrar error usando el Toast de JS sin recargar
+                    if (typeof mostrarToastJS === 'function') {
+                        mostrarToastJS("error", "Fallo al reservar", res.body.error || res.body.mensaje || "Ocurrió un error.");
+                    } else {
+                        alert("Fallo al reservar: " + (res.body.error || res.body.mensaje || "Ocurrió un error."));
+                    }
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                if (typeof mostrarToastJS === 'function') {
+                    mostrarToastJS("error", "Error de red", "No se pudo conectar con el servidor.");
+                } else {
+                    alert("Error de conexión al intentar reservar.");
+                }
+            });
+        });
+    });
+});
+</script>
+
+{% endblock %}
