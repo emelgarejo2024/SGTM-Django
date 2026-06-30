@@ -1,8 +1,8 @@
 # Sistema de Gestión de Turnos Médicos (SGTM)
 
-**Asignatura:** Diseño de Software — Informática 2026  
+**Asignatura:** Diseño de Software — INFO-1156  
 **Repositorio:** [emelgarejo2024/SGTM-Django](https://github.com/emelgarejo2024/SGTM-Django)  
-**Stack principal:** Django 6 · PostgreSQL 15 · Python 3.12
+**Stack principal:** Django 6 · PostgreSQL 15 · Python 3.12 · Django REST Framework · JWT
 
 ---
 
@@ -16,10 +16,11 @@
 6. [Variables de Entorno](#6-variables-de-entorno)
 7. [Comandos del Makefile](#7-comandos-del-makefile)
 8. [Testing y Cobertura](#8-testing-y-cobertura)
-9. [Pipeline de Integración Continua](#9-pipeline-de-integración-continua)
-10. [Estructura del Proyecto](#10-estructura-del-proyecto)
-11. [Reglas de Negocio Implementadas](#11-reglas-de-negocio-implementadas)
-12. [Equipo de Desarrollo](#12-equipo-de-desarrollo)
+9. [API REST y Autenticación](#9-api-rest-y-autenticación)
+10. [Pipeline de Integración Continua](#10-pipeline-de-integración-continua)
+11. [Estructura del Proyecto](#11-estructura-del-proyecto)
+12. [Reglas de Negocio Implementadas](#12-reglas-de-negocio-implementadas)
+13. [Equipo de Desarrollo](#13-equipo-de-desarrollo)
 
 ---
 
@@ -27,13 +28,16 @@
 
 El SGTM es una plataforma web centralizada para la administración de citas médicas entre pacientes y profesionales de la salud. El sistema digitaliza y automatiza el proceso de agendamiento, eliminando los errores asociados a la gestión manual y garantizando la consistencia de datos mediante reglas de negocio formales.
 
-**Funcionalidades principales:**
+**Funcionalidades implementadas:**
 
-- Reserva, cancelación y reagendamiento autónomo de turnos por parte del paciente.
-- Gestión de disponibilidad horaria por parte del profesional médico.
-- Registro de asistencia presencial mediante Check-in.
+- Registro e inicio de sesión de usuarios con autenticación JWT.
+- Reserva atómica de turnos médicos con protección contra doble booking concurrente.
+- Cancelación de turnos con validación de anticipación mínima (12 horas).
+- Registro de check-in presencial con ventana de tolerancia (30 min antes / 10 min después).
+- Bloqueo administrativo de agenda médica por rango de fechas.
+- Gestión de disponibilidad horaria del profesional médico.
+- Historial de citas, reagendamiento y panel de reportes (interfaz lista).
 - Auditoría automática de todas las operaciones del sistema.
-- Penalización automática ante inasistencias reiteradas (No-shows).
 
 ---
 
@@ -46,7 +50,7 @@ El proyecto aplica una **Arquitectura por Capas** complementada con dos patrones
 La capa de servicios encapsula la complejidad de la lógica de negocio, exponiendo una interfaz simplificada hacia las vistas. Las vistas no tienen conocimiento directo de cómo se valida ni se persiste una reserva.
 
 ```
-Capa de Presentación  →  views.py
+Capa de Presentación  →  views.py / views_frontend.py
 Capa de Servicios     →  services.py   (Facade: lógica de negocio + atomicidad)
 Capa de Datos         →  models.py     (Validaciones en clean() + CheckConstraints)
 ```
@@ -67,19 +71,22 @@ La operación de reserva utiliza `select_for_update()` dentro de `transaction.at
 
 ## 3. Tecnologías y Dependencias
 
-| Componente           | Herramienta     | Versión |
-| -------------------- | --------------- | ------- |
-| Framework backend    | Django          | 6.0.5   |
-| Base de datos        | PostgreSQL      | 15+     |
-| Driver de base datos | psycopg2-binary | 2.9.12  |
-| Framework de testing | pytest          | 9.1.1   |
-| Plugin Django pytest | pytest-django   | 4.12.0  |
-| Cobertura de código  | pytest-cov      | 7.1.0   |
-| Análisis estático    | Flake8          | 7.3.0   |
-| Formateo de código   | Black           | 26.5.1  |
-| Variables de entorno | python-dotenv   | 1.2.2   |
-| Calidad de código    | SonarQube (UCT) | —       |
-| CI/CD                | GitHub Actions  | —       |
+| Componente              | Herramienta                    | Versión |
+| ----------------------- | ------------------------------ | ------- |
+| Framework backend       | Django                         | 6.0.5   |
+| API REST                | Django REST Framework          | 3.17.1  |
+| Autenticación           | djangorestframework-simplejwt  | 5.5.1   |
+| Base de datos           | PostgreSQL                     | 15+     |
+| Driver de base datos    | psycopg2-binary                | 2.9.12  |
+| Framework de testing    | pytest                         | 9.1.1   |
+| Plugin Django pytest    | pytest-django                  | 4.12.0  |
+| Cobertura de código     | pytest-cov                     | 7.1.0   |
+| Tests E2E               | Selenium                       | 4.45.0  |
+| Análisis estático       | Flake8                         | 7.3.0   |
+| Formateo de código      | Black                          | 26.5.1  |
+| Variables de entorno    | python-dotenv                  | 1.2.2   |
+| Calidad de código       | SonarQube (UCT)                | —       |
+| CI/CD                   | GitHub Actions                 | —       |
 
 ---
 
@@ -174,20 +181,21 @@ SECURE_COOKIES=False
 
 ## 7. Comandos del Makefile
 
-| Comando         | Descripción                                             |
-| --------------- | ------------------------------------------------------- |
-| `make install`  | Instala las dependencias listadas en `requirements.txt` |
-| `make format`   | Formatea el código automáticamente con Black            |
-| `make lint`     | Verifica el cumplimiento de PEP-8 con Flake8            |
-| `make test`     | Ejecuta la suite de pruebas con pytest                  |
-| `make coverage` | Ejecuta las pruebas y genera el reporte `coverage.xml`  |
+| Comando          | Descripción                                                              |
+| ---------------- | ------------------------------------------------------------------------ |
+| `make install`   | Instala las dependencias listadas en `requirements.txt`                  |
+| `make format`    | Formatea el código automáticamente con Black                             |
+| `make lint`      | Verifica el cumplimiento de PEP-8 con Flake8                             |
+| `make test`      | Ejecuta tests unitarios (excluye tests E2E de Selenium)                  |
+| `make coverage`  | Ejecuta tests unitarios y genera el reporte `coverage.xml` para SonarQube|
+| `make test-e2e`  | Ejecuta solo los tests E2E con Selenium (requiere servidor corriendo)    |
 
 ---
 
 ## 8. Testing y Cobertura
 
 ```bash
-# Ejecutar todos los tests
+# Tests unitarios (sin Selenium, no requiere servidor corriendo)
 make test
 
 # Ejecutar con reporte de cobertura en consola
@@ -195,22 +203,57 @@ pytest --cov=. --cov-report=term-missing
 
 # Generar coverage.xml para integración con SonarQube
 make coverage
+
+# Tests E2E con Selenium (requiere servidor Django corriendo en localhost)
+make test-e2e
 ```
 
 **Organización de la suite de pruebas:**
 
-| Archivo                   | Alcance                                             |
-| ------------------------- | --------------------------------------------------- |
-| `tests/test_models.py`    | Validaciones de modelos y restricciones de datos    |
-| `tests/test_services.py`  | Lógica de reserva atómica y control de concurrencia |
-| `tests/test_views.py`     | Flujos HTTP y respuestas de las vistas              |
-| `tests/test_factories.py` | Correctitud de las factories de usuarios            |
+| Archivo                        | Alcance                                              |
+| ------------------------------ | ---------------------------------------------------- |
+| `tests/test_models.py`         | Validaciones de modelos y restricciones de datos     |
+| `tests/test_services.py`       | Lógica de reserva atómica y control de concurrencia  |
+| `tests/test_views.py`          | Flujos HTTP, endpoints REST y autenticación JWT      |
+| `tests/test_views_frontend.py` | Verificación de carga de vistas de la interfaz       |
+| `tests/test_factories.py`      | Correctitud de las factories de datos de prueba      |
+| `tests/test_checkin_e2e.py`    | Flujo E2E de check-in presencial con Selenium        |
 
-La cobertura actual supera el umbral mínimo del **70%** exigido por el SRS, alcanzando un **~88%** sobre los módulos principales del dominio.
+La cobertura actual supera el umbral mínimo del **70%** exigido por el SRS.
 
 ---
 
-## 9. Pipeline de Integración Continua
+## 9. API REST y Autenticación
+
+El sistema expone una API REST protegida mediante **JWT (JSON Web Tokens)** implementada con `djangorestframework-simplejwt`.
+
+**Obtener tokens de acceso (login):**
+
+```
+POST /api/token/
+Body: { "username": "<rut>", "password": "<contraseña>" }
+```
+
+**Registrar nuevo usuario:**
+
+```
+POST /api/auth/registro/
+Body: { "rut", "email", "password", "nombre", "apellido" }
+```
+
+**Endpoints protegidos (requieren Bearer token en el header):**
+
+| Método | Endpoint                       | Descripción                          |
+| ------ | ------------------------------ | ------------------------------------ |
+| POST   | `/api/checkin/<id>/`           | Registrar check-in presencial        |
+| POST   | `/api/cancelar/<id>/`          | Cancelar un turno (valida 12h)       |
+| POST   | `/api/bloquear-agenda/`        | Bloquear agenda del médico           |
+
+El token se almacena en `localStorage` del navegador bajo la clave `sgtm_access_token`. La navbar detecta automáticamente si hay sesión activa y muestra el nombre del usuario o el botón de inicio de sesión según corresponda.
+
+---
+
+## 10. Pipeline de Integración Continua
 
 El pipeline se ejecuta automáticamente en cada `push` o `pull_request` dirigido a las ramas `main` o `develop`.
 
@@ -222,49 +265,55 @@ Evento: push / pull_request
     |-- make install       (instalación de dependencias)
     |-- make format        (verificación de formato con Black)
     |-- make lint          (verificación PEP-8 con Flake8)
-    |-- make coverage      (ejecución de tests + generación de coverage.xml)
+    |-- make coverage      (tests unitarios + generación de coverage.xml)
     |-- Subir coverage.xml como artefacto del workflow
     |-- Análisis de calidad con SonarQube (servidor UCT)
 ```
 
-> **Entorno de CI:** En GitHub Actions la base de datos PostgreSQL se reemplaza automáticamente por SQLite en memoria, habilitado mediante la variable de entorno `GITHUB_ACTIONS=true` detectada en `settings.py`. Esto elimina la necesidad de levantar un servicio externo de base de datos en el runner.
+> **Entorno de CI:** En GitHub Actions la base de datos PostgreSQL se reemplaza automáticamente por SQLite en memoria, habilitado mediante la variable de entorno `GITHUB_ACTIONS=true` detectada en `settings.py`. Los tests E2E de Selenium se excluyen automáticamente en el pipeline.
 
 ---
 
-## 10. Estructura del Proyecto
+## 11. Estructura del Proyecto
 
 ```
 sgtm_proyecto/
 |-- .github/
 |   `-- workflows/
-|       `-- ci.yml              # Definición del pipeline CI/CD
+|       `-- ci.yml                  # Definición del pipeline CI/CD
 |-- core_sgtm/
-|   |-- settings.py             # Configuración centralizada via variables de entorno
-|   |-- urls.py                 # Enrutamiento principal
+|   |-- settings.py                 # Configuración centralizada via variables de entorno
+|   |-- urls.py                     # Enrutamiento principal
 |   `-- wsgi.py
 |-- turnos/
-|   |-- migrations/             # Migraciones de esquema (gestionadas por Django ORM)
+|   |-- migrations/                 # Migraciones de esquema (gestionadas por Django ORM)
+|   |-- templates/                  # Plantillas HTML (login, registro, agenda, etc.)
 |   |-- tests/
+|   |   |-- conftest.py             # Fixtures compartidas entre tests
 |   |   |-- test_models.py
 |   |   |-- test_services.py
+|   |   |-- test_services_extra.py
 |   |   |-- test_views.py
-|   |   `-- test_factories.py
-|   |-- apps.py                 # Registro del AppConfig y carga de signals
-|   |-- factories.py            # Factory de usuarios para el entorno de testing
-|   |-- models.py               # Entidades: Usuario, BloqueDisponibilidad, Reserva
-|   |-- services.py             # Capa Facade: orquestación de reserva atómica
-|   |-- signals.py              # Patrón Observer: registro de auditoría automático
-|   `-- views.py                # Controladores de la capa de presentación
-|-- .env.example                # Plantilla de variables de entorno
-|-- .flake8                     # Configuración del linter (exclusiones y max-line-length)
-|-- Makefile                    # Comandos centralizados del proyecto
-|-- pytest.ini                  # Configuración del framework de testing
-`-- requirements.txt            # Dependencias y versiones del proyecto
+|   |   |-- test_views_frontend.py
+|   |   |-- test_factories.py
+|   |   `-- test_checkin_e2e.py     # Tests E2E con Selenium
+|   |-- apps.py                     # Registro del AppConfig y carga de signals
+|   |-- factories.py                # Factories de datos para el entorno de testing
+|   |-- models.py                   # Entidades: Usuario, BloqueDisponibilidad, Reserva
+|   |-- services.py                 # Capa Facade + TurnoService + AgendaService
+|   |-- signals.py                  # Patrón Observer: registro de auditoría automático
+|   |-- views.py                    # Controladores REST y vistas principales
+|   `-- views_frontend.py           # Vistas de la interfaz de usuario
+|-- .env.example                    # Plantilla de variables de entorno
+|-- .flake8                         # Configuración del linter
+|-- Makefile                        # Comandos centralizados del proyecto
+|-- pytest.ini                      # Configuración del framework de testing
+`-- requirements.txt                # Dependencias y versiones del proyecto
 ```
 
 ---
 
-## 11. Reglas de Negocio Implementadas
+## 12. Reglas de Negocio Implementadas
 
 | Identificador | Descripción                                              | Estado       |
 | ------------- | -------------------------------------------------------- | ------------ |
@@ -273,19 +322,22 @@ sgtm_proyecto/
 | BR-8          | Bloqueo de reservas sobre fechas y horas pasadas         | Implementado |
 | BR-13         | Reserva atómica sin doble booking concurrente            | Implementado |
 | BR-18 / BR-19 | Ciclo de vida formal de estados del turno                | Implementado |
+| BR-21 / BR-22 | Check-in en ventana de 30 min antes / 10 min después     | Implementado |
+| BR-24 / BR-25 | Cancelación con 12h de anticipación y liberación de bloque | Implementado |
+| BR-27         | Bloqueo administrativo de agenda por rango de fechas     | Implementado |
 | NFR-8         | Integridad transaccional mediante `transaction.atomic()` | Implementado |
 | NFR-12        | Auditoría automática de operaciones via Django Signals   | Implementado |
 
 ---
 
-## 12. Equipo de Desarrollo
+## 13. Equipo de Desarrollo
 
 | Integrante      | Rol                             | Responsabilidades                                                                                          |
 | --------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | Edgar Melgarejo | DevOps / Arquitectura / Calidad | Pipeline CI/CD, integración SonarQube, diseño arquitectónico, suite de pruebas unitarias (cobertura > 70%) |
-| Rodrigo Reyes   | Seguridad / Backend             | Autenticación JWT, Refresh Tokens, controladores REST, pruebas de integración                              |
-| Benjamín Parra  | Frontend / Testing E2E          | Interfaz de usuario, panel de recepcionista, pruebas End-to-End (Cypress/Selenium)                         |
+| Rodrigo Reyes   | Seguridad / Backend             | Autenticación JWT, Refresh Tokens, controladores REST, lógica de check-in y cancelación                    |
+| Benjamín Parra  | Frontend / Testing E2E          | Interfaz de usuario, plantillas HTML, factories de prueba, pruebas E2E con Selenium                        |
 
 ---
 
-_Universidad Católica de Temuco — Ingeniería en Informática — 2026_
+_Universidad Católica de Temuco — Ingeniería en INFO-1156 — 2026_
