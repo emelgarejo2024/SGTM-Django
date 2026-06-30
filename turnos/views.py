@@ -11,7 +11,7 @@ from rest_framework.permissions import AllowAny
 from django.db import IntegrityError
 from rest_framework_simplejwt.tokens import RefreshToken
 from .services import TurnoService, AgendaService
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_http_methods
 
 @require_GET
 def vista_login(request):
@@ -148,17 +148,20 @@ def api_registrar_usuario(request):
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@require_GET
 def api_obtener_especialidades(request):
     especialidades_lista = list(Especialidad.objects.values("id", "nombre"))
     return JsonResponse({"especialidades": especialidades_lista}, safe=False)
 
 
+@require_GET
 def index(request):
     """Muestra el formulario de búsqueda con datos reales de la BD."""
     especialidades = ReservaFacade.obtener_especialidades()
     return render(request, "index.html", {"especialidades": especialidades})
 
 
+@require_GET
 def agenda(request):
     """Muestra los resultados de la búsqueda de bloques médicos."""
     especialidad_id = request.GET.get("especialidad")
@@ -182,6 +185,7 @@ def agenda(request):
     return render(request, "agenda.html", contexto)
 
 
+@require_http_methods(["GET", "POST"])
 def confirmar_reserva(request):
     """Procesa la reserva cuando el paciente hace click en 'Reservar'."""
     if request.method == "POST":
