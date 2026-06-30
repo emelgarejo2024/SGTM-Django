@@ -24,7 +24,9 @@ class UsuarioFactory:
         # Validar que el rol exista en las opciones del modelo
         roles_permitidos = dict(Usuario.ROLES).keys()
         if tipo_rol not in roles_permitidos:
-            raise ValueError(f"El rol '{tipo_rol}' no es válido. Usa: {list(roles_permitidos)}")
+            raise ValueError(
+                f"El rol '{tipo_rol}' no es válido. Usa: {list(roles_permitidos)}"
+            )
 
         # Instanciar el usuario
         nuevo_usuario = Usuario(

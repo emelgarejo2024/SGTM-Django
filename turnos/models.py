@@ -66,10 +66,7 @@ class BloqueDisponibilidad(models.Model):
 
         if self.hora_inicio and self.hora_fin and self.hora_inicio >= self.hora_fin:
             raise ValidationError(
-                {
-                    "hora_fin": "La hora de fin debe ser posterior a la hora de inicio."
-                }
-
+                {"hora_fin": "La hora de fin debe ser posterior a la hora de inicio."}
             )
 
         if self.medico_id and self.fecha and self.hora_inicio and self.hora_fin:
