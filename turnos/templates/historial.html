@@ -41,7 +41,6 @@
         </a>
     </div>
 </div>
-
 <!-- RESULTS TABLE CARD -->
 <div class="sgtm-card animate-in animate-in-delay-2" data-testid="card-historial">
     <div class="sgtm-card-header" style="display: flex; align-items: center; justify-content: space-between;">
@@ -49,15 +48,32 @@
             <i class="bi bi-list-check"></i>
             Mis Turnos
         </h2>
-        {% if turnos %}
-        <span class="badge-disponible">
-            {{ turnos|length }} turno{{ turnos|length|pluralize:"s" }}
-        </span>
-        {% endif %}
+        <span id="badge-count" class="badge-disponible" style="display:none;"></span>
     </div>
 
-    {% if turnos %}
-    <div style="overflow-x: auto;">
+    <!-- Sin sesión -->
+    <div id="estado-sin-sesion" class="empty-state" style="display:none;">
+        <i class="bi bi-lock d-block"></i>
+        <p>Debes <a href="/login/" style="color:var(--primary); font-weight:600;">iniciar sesión</a> para ver tu historial.</p>
+    </div>
+
+    <!-- Cargando -->
+    <div id="estado-cargando" class="empty-state">
+        <i class="bi bi-hourglass-split d-block"></i>
+        <p>Cargando turnos...</p>
+    </div>
+
+    <!-- Vacío -->
+    <div id="estado-vacio" class="empty-state" style="display:none;" data-testid="historial-vacio">
+        <i class="bi bi-calendar-x d-block"></i>
+        <p>No tienes turnos agendados por el momento.</p>
+        <a href="/" class="btn-sgtm" style="margin-top: 0.75rem; display: inline-flex;">
+            <i class="bi bi-search"></i> Buscar turnos disponibles
+        </a>
+    </div>
+
+    <!-- Tabla -->
+    <div id="estado-tabla" style="display:none; overflow-x: auto;">
         <table class="sgtm-table" data-testid="tabla-historial">
             <thead>
                 <tr>
@@ -69,94 +85,14 @@
                     <th style="text-align: center;"><i class="bi bi-gear"></i> Acciones</th>
                 </tr>
             </thead>
-            <tbody>
-                {% for turno in turnos %}
-                <tr class="animate-in" style="animation-delay: {{ forloop.counter0 }}00ms;" data-testid="fila-historial-{{ turno.id }}">
-                    <td>
-                        <span style="font-weight: 600; font-size: 0.9rem;">
-                            {{ turno.bloque.fecha|date:"d/m/Y" }}
-                        </span>
-                    </td>
-                    <td>
-                        <span style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">
-                            {{ turno.bloque.hora_inicio|time:"H:i" }}
-                        </span>
-                        <span style="color: var(--text-muted); margin: 0 0.25rem;">—</span>
-                        <span style="color: var(--text-secondary);">
-                            {{ turno.bloque.hora_fin|time:"H:i" }}
-                        </span>
-                    </td>
-                    <td>
-                        Dr/a. {{ turno.bloque.medico.first_name }} {{ turno.bloque.medico.last_name }}
-                    </td>
-                    <td>
-                        <span style="background: var(--primary-subtle); color: var(--primary-dark); font-size: 0.78rem; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 20px;">
-                            {{ turno.bloque.especialidad.nombre }}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="badge-estado badge-estado-{{ turno.estado|lower }}" data-testid="estado-historial-{{ turno.id }}">
-                            {{ turno.get_estado_display }}
-                        </span>
-                    </td>
-                    <td style="text-align: center;">
-                        <div style="display: flex; gap: 0.4rem; justify-content: center; flex-wrap: wrap;">
-
-                            {% if turno.estado == "RESERVADO" %}
-                            <!-- CONFIRMAR (UC-08) -->
-                            <form method="POST" action="{% url 'confirmar_turno' %}" style="display: inline;">
-                                {% csrf_token %}
-                                <input type="hidden" name="turno_id" value="{{ turno.id }}">
-                                <button type="submit" class="btn-reservar" data-testid="btn-confirmar-{{ turno.id }}" title="Confirmar asistencia">
-                                    <i class="bi bi-check-lg"></i> Confirmar
-                                </button>
-                            </form>
-                            {% endif %}
-
-                            {% if turno.estado == "RESERVADO" or turno.estado == "CONFIRMADO" %}
-                            <!-- REAGENDAR (UC-03) -->
-                            <a href="{% url 'reagendar_turno' turno.id %}" class="btn-sgtm-outline" data-testid="btn-reagendar-{{ turno.id }}" title="Reagendar turno">
-                                <i class="bi bi-arrow-repeat"></i> Reagendar
-                            </a>
-
-                            <!-- CANCELAR (UC-06) -->
-                            <form method="POST" action="{% url 'cancelar_turno' %}" style="display: inline;" data-testid="form-cancelar-{{ turno.id }}" onsubmit="return confirm('¿Está seguro de que desea cancelar este turno?');">
-                                {% csrf_token %}
-                                <input type="hidden" name="turno_id" value="{{ turno.id }}">
-                                {% if turno.puede_cancelar %}
-                                <button type="submit" class="btn-cancelar" data-testid="btn-cancelar-{{ turno.id }}" title="Cancelar turno">
-                                    <i class="bi bi-x-lg"></i> Cancelar
-                                </button>
-                                {% else %}
-                                <button type="button" class="btn-cancelar" disabled data-testid="btn-cancelar-{{ turno.id }}" title="Fuera de plazo: se requieren mínimo 12 horas de anticipación (BR-24)">
-                                    <i class="bi bi-x-lg"></i> Cancelar
-                                </button>
-                                {% endif %}
-                            </form>
-                            {% endif %}
-
-                            {% if turno.estado == "CANCELADO" or turno.estado == "EJECUTADO" or turno.estado == "NO_SHOW" %}
-                            <span style="font-size: 0.78rem; color: var(--text-muted);" data-testid="sin-acciones-{{ turno.id }}">
-                                Sin acciones disponibles
-                            </span>
-                            {% endif %}
-
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
+            <tbody id="tbody-historial"></tbody>
         </table>
     </div>
-    {% else %}
-    <div class="empty-state" data-testid="historial-vacio">
-        <i class="bi bi-calendar-x d-block"></i>
-        <p>No tiene turnos {% if filtro_activo == 'pasados' %}pasados{% else %}agendados{% endif %} por el momento.</p>
-        <a href="/" class="btn-sgtm" style="margin-top: 0.75rem; display: inline-flex;">
-            <i class="bi bi-search"></i> Buscar turnos disponibles
-        </a>
-    </div>
-    {% endif %}
+</div>
+
+<!-- Renderizamos el token CSRF una vez para usarlo en JS -->
+<div style="display: none;" id="csrf-container">
+    {% csrf_token %}
 </div>
 
 <!-- BACK BUTTON -->
@@ -166,4 +102,102 @@
     </a>
 </div>
 
-{% endblock %}
+<script>
+(function () {
+    const token = localStorage.getItem("sgtm_access_token");
+    const filtro = new URLSearchParams(window.location.search).get("filtro") || "futuros";
+
+    const elCargando  = document.getElementById("estado-cargando");
+    const elSinSesion = document.getElementById("estado-sin-sesion");
+    const elVacio     = document.getElementById("estado-vacio");
+    const elTabla     = document.getElementById("estado-tabla");
+    const elBadge     = document.getElementById("badge-count");
+    const tbody       = document.getElementById("tbody-historial");
+
+    function mostrar(el) {
+        [elCargando, elSinSesion, elVacio, elTabla].forEach(e => e.style.display = "none");
+        el.style.display = "";
+    }
+
+    if (!token) {
+        mostrar(elSinSesion);
+        return;
+    }
+
+    fetch(`/api/mis-turnos/?filtro=${filtro}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+    })
+    .then(r => {
+        if (r.status === 401) { mostrar(elSinSesion); return null; }
+        return r.json();
+    })
+    .then(data => {
+        if (!data) return;
+        if (data.length === 0) { mostrar(elVacio); return; }
+
+        elBadge.textContent = `${data.length} turno${data.length !== 1 ? "s" : ""}`;
+        elBadge.style.display = "inline-flex";
+
+        tbody.innerHTML = data.map(t => {
+            const estadoClass = t.estado.toLowerCase();
+            const csrfToken = document.querySelector('#csrf-container input[name="csrfmiddlewaretoken"]').value;
+            let acciones = "";
+
+            if (t.estado === "RESERVADO") {
+                acciones += `
+                    <form method="POST" action="/historial/confirmar/" style="display:inline;">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+                        <input type="hidden" name="turno_id" value="${t.id}">
+                        <button type="submit" class="btn-reservar" title="Confirmar asistencia">
+                            <i class="bi bi-check-lg"></i> Confirmar
+                        </button>
+                    </form>`;
+            }
+
+            if (t.estado === "RESERVADO" || t.estado === "CONFIRMADO") {
+                acciones += `
+                    <a href="/reagendar/${t.id}/" class="btn-sgtm-outline" title="Reagendar">
+                        <i class="bi bi-arrow-repeat"></i> Reagendar
+                    </a>
+                    <form method="POST" action="/historial/cancelar/" style="display:inline;"
+                          onsubmit="return confirm('¿Cancelar este turno?');">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+                        <input type="hidden" name="turno_id" value="${t.id}">
+                        <button type="submit" class="btn-cancelar" ${!t.puede_cancelar ? 'disabled title="Requiere al menos 12h de anticipación (BR-24)"' : ""}>
+                            <i class="bi bi-x-lg"></i> Cancelar
+                        </button>
+                    </form>`;
+            }
+
+            if (!acciones) {
+                acciones = `<span style="font-size:0.78rem; color:var(--text-muted);">Sin acciones</span>`;
+            }
+
+            return `<tr data-testid="fila-historial-${t.id}">
+                <td><span style="font-weight:600;">${t.fecha}</span></td>
+                <td>
+                    <span style="font-weight:700; color:var(--text-primary);">${t.hora_inicio}</span>
+                    <span style="color:var(--text-muted); margin:0 .25rem;">—</span>
+                    <span style="color:var(--text-secondary);">${t.hora_fin}</span>
+                </td>
+                <td>${t.medico}</td>
+                <td><span style="background:var(--primary-subtle); color:var(--primary-dark); font-size:.78rem; font-weight:600; padding:.25rem .65rem; border-radius:20px;">${t.especialidad}</span></td>
+                <td><span class="badge-estado badge-estado-${estadoClass}" data-testid="estado-historial-${t.id}">${t.estado_display}</span></td>
+                <td style="text-align:center;">
+                    <div style="display:flex; gap:.4rem; justify-content:center; flex-wrap:wrap;">
+                        ${acciones}
+                    </div>
+                </td>
+            </tr>`;
+        }).join("");
+
+        mostrar(elTabla);
+    })
+    .catch(err => {
+        console.error("Error cargando historial:", err);
+        mostrar(elSinSesion);
+    });
+})();
+</script>
+
+{% endblock %}

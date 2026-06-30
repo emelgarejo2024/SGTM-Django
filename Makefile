@@ -35,4 +35,4 @@ test-e2e:
 	       turnos/tests/test_historial_e2e.py \
 	       turnos/tests/test_login_registro_e2e.py \
 	       turnos/tests/test_reagendar_e2e.py \
-	       turnos/tests/test_reportes_e2e.py
+	       turnos/tests/test_reportes_e2e.py

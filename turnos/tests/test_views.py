@@ -201,48 +201,175 @@ class TestVistas:
         assert "Ortopedia" in nombres
 
     # ------------------------------------------------------------------ #
-    #  POST /reservar/                                                     #
+    #  POST /api/turnos/reservar/                                          #
     # ------------------------------------------------------------------ #
-    def test_confirmar_reserva_sin_pacientes_redirige(self):
-        """Si no hay pacientes, confirmar_reserva redirige con error."""
-        response = self.client.post(reverse("confirmar_reserva"), {"bloque_id": 1})
-        assert response.status_code == 302
-        assert response["Location"].endswith(reverse("index"))
+    def test_api_reservar_turno_no_auth(self, api_client):
+        """Si no está autenticado, devuelve 401."""
+        response = api_client.post(reverse("api_reservar_turno"), {"bloque_id": 1})
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_confirmar_reserva_exitosa_redirige_a_index(self):
-        """Una reserva válida se crea y redirige al index."""
-        UsuarioFactory.crear_usuario(
-            "PACIENTE", "30303030-3", "pac_view", "123", "V", "W", "vw@cl.cl"
+    def test_api_reservar_turno_falta_bloque_id(self, api_client):
+        paciente = UsuarioFactory.crear_usuario(
+            "PACIENTE", "30303030-3", "pac_api", "123", "P", "A", "pa@cl.cl"
+        )
+        api_client.force_authenticate(user=paciente)
+        response = api_client.post(reverse("api_reservar_turno"), {})
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_api_reservar_turno_exitoso(self, api_client):
+        paciente = UsuarioFactory.crear_usuario(
+            "PACIENTE", "40404040-4", "pac_api2", "123", "P", "A", "pa2@cl.cl"
         )
         medico = UsuarioFactory.crear_usuario(
-            "MEDICO", "40404040-4", "dr_view", "123", "Dr", "V", "drv@cl.cl"
+            "MEDICO", "50505050-5", "dr_api", "123", "Dr", "M", "drm@cl.cl"
         )
-        esp = Especialidad.objects.create(nombre="Endocrinología")
-        manana = date.today() + timedelta(days=6)
+        esp = Especialidad.objects.create(nombre="Neurología")
         bloque = BloqueDisponibilidad.objects.create(
             medico=medico,
             especialidad=esp,
-            fecha=manana,
-            hora_inicio=time(15, 0),
-            hora_fin=time(15, 30),
+            fecha=date.today() + timedelta(days=5),
+            hora_inicio=time(10, 0),
+            hora_fin=time(10, 30),
         )
-        response = self.client.post(
-            reverse("confirmar_reserva"), {"bloque_id": bloque.id}
+        api_client.force_authenticate(user=paciente)
+        response = api_client.post(
+            reverse("api_reservar_turno"), {"bloque_id": bloque.id}
         )
-        assert response.status_code == 302
-        assert response["Location"].endswith(reverse("index"))
+        assert response.status_code == status.HTTP_201_CREATED
+        assert "exitosa" in response.data["mensaje"].lower()
 
-    def test_confirmar_reserva_get_redirige_a_index(self):
-        """Un GET a /reservar/ (sin POST) redirige directamente a index."""
-        response = self.client.get(reverse("confirmar_reserva"))
-        assert response.status_code == 302
-        assert response["Location"].endswith(reverse("index"))
-
-    def test_confirmar_reserva_falla_bloque_invalido(self):
-        UsuarioFactory.crear_usuario(
+    def test_api_reservar_turno_falla_bloque_invalido(self, api_client):
+        paciente = UsuarioFactory.crear_usuario(
             "PACIENTE", "55555555-5", "pac", "123", "A", "B", "a@a.cl"
         )
+        api_client.force_authenticate(user=paciente)
+        response = api_client.post(reverse("api_reservar_turno"), {"bloque_id": 9999})
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-        response = self.client.post(reverse("confirmar_reserva"), {"bloque_id": 9999})
+    # ------------------------------------------------------------------ #
+    #  Nuevas vistas HTML (Historial, Checkin, Cancelar, Confirmar, Reagendar)
+    # ------------------------------------------------------------------ #
+    def test_historial_view(self):
+        response = self.client.get(reverse("historial"), {"filtro": "futuros"})
+        assert response.status_code == 200
+        assert "turnos" in response.context
 
-        assert response.status_code == 302
+    def test_historial_view_pasados(self):
+        response = self.client.get(reverse("historial"), {"filtro": "pasados"})
+        assert response.status_code == 200
+
+    def test_checkin_view(self):
+        response = self.client.get(reverse("checkin"), {"q": "juan"})
+        assert response.status_code == 200
+        assert "turnos" in response.context
+
+    def test_checkin_accion_y_cancelar_form(self):
+        ahora = timezone.localtime(timezone.now())
+        paciente = UsuarioFactory.crear_usuario(
+            "PACIENTE", "60606060-6", "pac", "123", "P", "A", "a2@cl.cl"
+        )
+        medico = UsuarioFactory.crear_usuario(
+            "MEDICO", "70707070-7", "dr", "123", "D", "M", "m@cl.cl"
+        )
+        esp = Especialidad.objects.create(nombre="Test")
+
+        # Bloque para Check-in (hoy, en 5 minutos)
+        bloque_checkin = BloqueDisponibilidad.objects.create(
+            medico=medico,
+            especialidad=esp,
+            fecha=ahora.date(),
+            hora_inicio=(ahora + timedelta(minutes=5)).time(),
+            hora_fin=(ahora + timedelta(minutes=35)).time(),
+        )
+        from turnos.models import Reserva
+
+        reserva_checkin = Reserva.objects.create(
+            paciente=paciente, bloque=bloque_checkin, estado="RESERVADO"
+        )
+
+        self.client.force_login(medico)
+        resp_checkin = self.client.post(
+            reverse("checkin_accion"), {"turno_id": reserva_checkin.id, "q": "rut"}
+        )
+        assert resp_checkin.status_code == 302
+        reserva_checkin.refresh_from_db()
+        assert reserva_checkin.estado == "EN_ESPERA"
+
+        # Bloque para Cancelar (> 12 horas)
+        bloque_cancelar = BloqueDisponibilidad.objects.create(
+            medico=medico,
+            especialidad=esp,
+            fecha=(ahora + timedelta(days=2)).date(),
+            hora_inicio=time(10, 0),
+            hora_fin=time(10, 30),
+        )
+        reserva_cancelar = Reserva.objects.create(
+            paciente=paciente, bloque=bloque_cancelar, estado="RESERVADO"
+        )
+
+        self.client.force_login(paciente)
+        resp_cancelar = self.client.post(
+            reverse("cancelar_form"), {"turno_id": reserva_cancelar.id}
+        )
+        assert resp_cancelar.status_code == 302
+        reserva_cancelar.refresh_from_db()
+        assert reserva_cancelar.estado == "CANCELADO"
+
+    def test_confirmar_y_reagendar_views(self):
+        paciente = UsuarioFactory.crear_usuario(
+            "PACIENTE", "80808080-8", "pac", "123", "P", "A", "a3@cl.cl"
+        )
+        medico = UsuarioFactory.crear_usuario(
+            "MEDICO", "90909090-9", "dr", "123", "D", "M", "m2@cl.cl"
+        )
+        esp = Especialidad.objects.create(nombre="Test2")
+        bloque = BloqueDisponibilidad.objects.create(
+            medico=medico,
+            especialidad=esp,
+            fecha=date.today(),
+            hora_inicio=time(10, 0),
+            hora_fin=time(10, 30),
+        )
+        from turnos.models import Reserva
+
+        reserva = Reserva.objects.create(
+            paciente=paciente, bloque=bloque, estado="RESERVADO"
+        )
+
+        self.client.force_login(paciente)
+
+        # Test Confirmar
+        resp_conf = self.client.post(
+            reverse("confirmar_form"), {"turno_id": reserva.id}
+        )
+        assert resp_conf.status_code == 302
+        reserva.refresh_from_db()
+        assert reserva.estado == "CONFIRMADO"
+
+        # Test Reagendar
+        resp_reag = self.client.get(reverse("reagendar_turno", args=[reserva.id]))
+        assert resp_reag.status_code == 302
+
+    # ------------------------------------------------------------------ #
+    #  API mis-turnos
+    # ------------------------------------------------------------------ #
+    def test_mis_turnos_api(self, api_client):
+        paciente = UsuarioFactory.crear_usuario(
+            "PACIENTE", "99999999-9", "pac", "123", "P", "A", "a9@cl.cl"
+        )
+        api_client.force_authenticate(user=paciente)
+        resp1 = api_client.get(reverse("mis_turnos"))
+        assert resp1.status_code == 200
+
+        resp2 = api_client.get(reverse("mis_turnos") + "?filtro=pasados")
+        assert resp2.status_code == 200
+
+    def test_custom_token_serializer(self):
+        from turnos.serializers import CustomTokenObtainPairSerializer
+
+        paciente = UsuarioFactory.crear_usuario(
+            "PACIENTE", "10000000-0", "pac10", "123", "P", "A", "10@cl.cl"
+        )
+        token = CustomTokenObtainPairSerializer.get_token(paciente)
+        assert token["rol"] == "PACIENTE"
+        assert token["username"] == "pac10"

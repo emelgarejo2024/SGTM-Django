@@ -6,6 +6,8 @@ from selenium.webdriver.support import expected_conditions as EC
 import os
 import pytest
 
+pytestmark = pytest.mark.e2e  # Excluido por defecto (ver pytest.ini addopts)
+
 if os.getenv("CI") or os.getenv("GITHUB_ACTIONS"):
     pytest.skip("Skipping E2E in CI", allow_module_level=True)
 

@@ -122,9 +122,10 @@
                     </td>
                     <td style="text-align: center;">
                         {% if turno.estado == "RESERVADO" or turno.estado == "CONFIRMADO" %}
-                        <form method="POST" action="{% url 'registrar_checkin' %}" style="display: inline;">
+                        <form method="POST" action="{% url 'checkin_accion' %}" style="display: inline;">
                             {% csrf_token %}
                             <input type="hidden" name="turno_id" value="{{ turno.id }}">
+                            <input type="hidden" name="q" value="{{ query }}">
                             <button type="submit" class="btn-reservar" data-testid="btn-checkin-{{ turno.id }}">
                                 <i class="bi bi-check-lg"></i> Marcar llegada
                             </button>

@@ -37,11 +37,17 @@
             <a href="/" class="nav-link-custom {% block nav_inicio %}{% endblock %}">
                 <i class="bi bi-house-door"></i> Inicio
             </a>
+            <a href="/historial/" class="nav-link-custom">
+                <i class="bi bi-clock-history"></i> Mi Historial
+            </a>
             <!-- Estado: no autenticado -->
             <a id="nav-btn-login" href="{% url 'login' %}" class="nav-link-custom" style="display:none;">
                 <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
             </a>
             <!-- Estado: autenticado -->
+            <a id="nav-btn-checkin" href="/checkin/" class="nav-link-custom" style="display:none;">
+                <i class="bi bi-person-check"></i> Check-in
+            </a>
             <span id="nav-usuario-nombre" class="nav-link-custom" style="display:none; cursor:default; opacity:0.85;">
                 <i class="bi bi-person-circle"></i> <span id="nav-nombre-texto"></span>
             </span>
@@ -111,24 +117,32 @@
     const spanNombre = document.getElementById("nav-usuario-nombre");
     const textoNombre = document.getElementById("nav-nombre-texto");
     const btnLogout = document.getElementById("nav-btn-logout");
+    const btnCheckin = document.getElementById("nav-btn-checkin");
 
     if (token) {
+        let esRecepcion = false;
         try {
             const payload = JSON.parse(atob(token.split(".")[1]));
             textoNombre.textContent = payload.username || payload.email || "Usuario";
+            if (payload.rol === "RECEPCION" || payload.rol === "MEDICO") {
+                esRecepcion = true;
+            }
         } catch (error) {
             console.error("Token JWT inválido o no decodificable:", error);
             textoNombre.textContent = "Usuario";
         }
         spanNombre.style.display = "inline-flex";
         btnLogout.style.display = "inline-flex";
+        btnCheckin.style.display = esRecepcion ? "inline-flex" : "none";
         btnLogin.style.display = "none";
     } else {
         btnLogin.style.display = "inline-flex";
         spanNombre.style.display = "none";
         btnLogout.style.display = "none";
+        btnCheckin.style.display = "none";
     }
 })();
+
 
 function cerrarSesion() {
     localStorage.removeItem("sgtm_access_token");
