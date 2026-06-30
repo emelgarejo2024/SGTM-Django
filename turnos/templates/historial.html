@@ -105,7 +105,7 @@
 <script>
 (function () {
     const token = localStorage.getItem("sgtm_access_token");
-    const filtro = new URLSearchParams(window.location.search).get("filtro") || "futuros";
+    const filtro = new URLSearchParams(globalThis.location.search).get("filtro") || "futuros";
 
     const elCargando  = document.getElementById("estado-cargando");
     const elSinSesion = document.getElementById("estado-sin-sesion");
@@ -135,7 +135,7 @@
         if (!data) return;
         if (data.length === 0) { mostrar(elVacio); return; }
 
-        elBadge.textContent = `${data.length} turno${data.length !== 1 ? "s" : ""}`;
+        elBadge.textContent = `${data.length} turno${data.length === 1 ? "" : "s"}`;
         elBadge.style.display = "inline-flex";
 
         tbody.innerHTML = data.map(t => {
@@ -163,7 +163,7 @@
                           onsubmit="return confirm('¿Cancelar este turno?');">
                         <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
                         <input type="hidden" name="turno_id" value="${t.id}">
-                        <button type="submit" class="btn-cancelar" ${!t.puede_cancelar ? 'disabled title="Requiere al menos 12h de anticipación (BR-24)"' : ""}>
+                        <button type="submit" class="btn-cancelar" ${t.puede_cancelar ? "" : 'disabled title="Requiere al menos 12h de anticipación (BR-24)"'}>
                             <i class="bi bi-x-lg"></i> Cancelar
                         </button>
                     </form>`;

@@ -61,23 +61,52 @@ try:
 except Exception:
     pass
 
-# 4. Crear Bloques
-manana = date.today() + timedelta(days=1)
-bloques = [
-    (medico1, especialidades[3], time(9, 0), time(9, 30)),
-    (medico1, especialidades[3], time(9, 30), time(10, 0)),
-    (medico1, especialidades[3], time(10, 0), time(10, 30)),
-    (medico2, especialidades[1], time(11, 0), time(11, 30)),
-    (medico2, especialidades[1], time(11, 30), time(12, 0)),
-]
+# 4. Crear Bloques de forma masiva
+from datetime import datetime
+fecha_actual = date.today() + timedelta(days=1)
+# Si hoy ya es después del 5 de julio, generamos 15 días hacia adelante
+fecha_fin = date(2026, 7, 5)
+if fecha_fin < fecha_actual:
+    fecha_fin = fecha_actual + timedelta(days=15)
 
-for med, esp, inicio, fin in bloques:
-    BloqueDisponibilidad.objects.get_or_create(
-        medico=med,
-        especialidad=esp,
-        fecha=manana,
-        hora_inicio=inicio,
-        hora_fin=fin,
-    )
-print(f"✅ Bloques generados para: {manana}.")
+print(f"Generando bloques desde {fecha_actual} hasta {fecha_fin}...")
+bloques_creados = 0
+
+while fecha_actual <= fecha_fin:
+    # Solo de Lunes a Viernes (0=Lunes, 4=Viernes)
+    if fecha_actual.weekday() < 5:
+        # Generar bloques de 09:00 a 17:00 (con pausa almuerzo 13:00-14:00)
+        horas = [
+            time(9, 0), time(9, 30), time(10, 0), time(10, 30),
+            time(11, 0), time(11, 30), time(12, 0), time(12, 30),
+            time(14, 0), time(14, 30), time(15, 0), time(15, 30),
+            time(16, 0), time(16, 30)
+        ]
+        
+        for hora_ini in horas:
+            dt_ini = datetime.combine(fecha_actual, hora_ini)
+            hora_f = (dt_ini + timedelta(minutes=30)).time()
+            
+            # Médico 1: Medicina General
+            BloqueDisponibilidad.objects.get_or_create(
+                medico=medico1,
+                especialidad=especialidades[3], 
+                fecha=fecha_actual,
+                hora_inicio=hora_ini,
+                hora_fin=hora_f,
+            )
+            
+            # Médico 2: Pediatría
+            BloqueDisponibilidad.objects.get_or_create(
+                medico=medico2,
+                especialidad=especialidades[1], 
+                fecha=fecha_actual,
+                hora_inicio=hora_ini,
+                hora_fin=hora_f,
+            )
+            bloques_creados += 2
+            
+    fecha_actual += timedelta(days=1)
+
+print(f"✅ {bloques_creados} bloques generados masivamente.")
 print("🎉 ¡Base de datos poblada con éxito!")

@@ -30,7 +30,9 @@ function initToasts() {
             const toastData = JSON.parse(pendingToast);
             mostrarToastJS(toastData.tipo, toastData.titulo, toastData.mensaje);
             sessionStorage.removeItem("sgtm_pending_toast");
-        } catch (e) {}
+        } catch (e) {
+            console.error("Error parsing toast data from sessionStorage:", e);
+        }
     }
 }
 
